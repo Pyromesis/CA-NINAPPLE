@@ -49,6 +49,11 @@ LiveContainer; el certificado sirve para firmar cada juego dentro.
 No cierres LiveContainer desde el selector de apps mientras juegas: iOS mata al anfitrión y con
 él al juego.
 
+## ¿Y un mando?
+
+Sí: se empareja por Bluetooth en **Ajustes → Bluetooth** y el mando en pantalla desaparece. El
+mapeo es por posición, como un mando de Switch. Está todo en **[MANDOS.md](MANDOS.md)**.
+
 ## 2b. Instalar directo, sin LiveContainer
 
 Si no quieres configurar el certificado de LiveContainer, **[PlumeImpactor](https://github.com/khcrysalis/PlumeImpactor)**
