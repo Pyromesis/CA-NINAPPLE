@@ -111,12 +111,12 @@ Opsi yang berguna (`-h` menampilkan semuanya):
 
 Pilih **03 Package → App + data folder** di GUI, atau tambahkan `--split-data` di terminal. Di kartu yang sama ada **Increased Memory Limit On / Off** (default On; di terminal `--no-entitlements` untuk Off). Hasilnya ada dua:
 
-- `<NamaGame>.ipa`: berisi app saja (puluhan MB), sehingga sign dan install di Sideloadly hanya beberapa detik.
+- `<NamaGame>.ipa`: berisi app saja (puluhan MB), sehingga install di LiveContainer hanya beberapa detik.
 - `<NamaGame>-data\`: berisi `romfs`, `msl` (shader), dan `aoc` (DLC). Folder ini dibuat lewat hard link, jadi tidak memakan ruang disk tambahan di PC.
 
 Cara memasangnya di iPhone/iPad:
 
-1. Install `<NamaGame>.ipa` dengan Sideloadly seperti biasa (langkah 5).
+1. Install `<NamaGame>.ipa` di LiveContainer seperti biasa (langkah 5).
 2. Buka app-nya sekali. Akan muncul layar **Game data needed** yang menunjukkan nama folder, ukurannya, dan langkah-langkahnya.
 3. Salin seluruh folder `<NamaGame>-data` ke Documents app itu:
    - **Dari Windows:** buka app **Apple Devices** (atau iTunes), pilih iPad → **Files** → nama app → seret folder `<NamaGame>-data` ke situ.
@@ -138,7 +138,7 @@ Nama folder tidak perlu diubah, karena app mencari `romfs` di Documents dan di s
 - **Versi:** pakai **1.4.3** (update `v720896`). Taruh XCI/NSP base dan NSP update 1.4.3 di satu folder. Profil resmi dibuat untuk 1.4.3; versi lain tidak mendapat patch 60 fps dan render scale.
 - **Mode split sangat disarankan.** Datanya sekitar 17 GB, jadi IPA tunggal butuh waktu sangat lama untuk sign dan install.
 - **Ruang kosong di iPad:** minimal sekitar 25 GB (data, ditambah cache shader dan save).
-- **Memori:** TotK memakai sampai 5 GB memori game. Di Sideloadly, aktifkan **Increased Memory Limit**. Upstream baru menguji TotK di iPhone 17 Pro Max dan iPad Pro M2. Perangkat dengan RAM 6 GB atau chip tanpa BC texture (A16 ke bawah) berisiko ditutup iOS karena kehabisan memori.
+- **Memori:** TotK memakai sampai 5 GB memori game. Aktifkan **Increased Memory Limit** saat menandatangani LiveContainer. Upstream baru menguji TotK di iPhone 17 Pro Max dan iPad Pro M2. Perangkat dengan RAM 6 GB atau chip tanpa BC texture (A16 ke bawah) berisiko ditutup iOS karena kehabisan memori.
 - **Start pertama lama:** layar "Preparing shaders" memang muncul di start pertama. Tunggu sampai selesai dan jangan tutup app.
 - **Hemat memori (otomatis):** di A16 ke bawah, tekstur BC diubah ke ASTC 4x4 (¼ memori RGBA8). Pengaman memori menurunkan fps ke 30 kalau sisa memori < 600 MB, dan membersihkan cache kalau < 300 MB (HUD menampilkan `GUARD`). Di perangkat 6 GB, *Metal 4 pipelines* dan *Pipeline prebuild* mati secara default, jadi tidak ada layar "Preparing pipelines" yang lama. Layar "Preparing shaders" berasal dari NXNative asli (upstream). Itu kompilasi shader Metal sekali, bukan emulator, dan di perangkat 6 GB sekarang jalan di latar belakang.
 - **Kalau keluar sendiri:** ambil `log.txt` dan `log.prev.txt` dari Files → *On My iPad* → app TotK.
@@ -162,13 +162,13 @@ E:\ProjectIOS\Games\0100F2C0115B6000_nxw\
 
 ## 5. Pasang ke iPhone
 
-1. Pasang **Sideloadly** (sideloadly.io) di Windows. Kalau diminta, pasang juga iTunes dan iCloud versi dari situs Apple, bukan dari Microsoft Store.
-2. Colok iPhone, buka Sideloadly, lalu tarik file `.ipa` ke jendelanya. Masukkan Apple ID kamu, lalu klik **Start**.
-3. Kalau di **Advanced options** ada pilihan *Increased Memory Limit*, aktifkan. Game besar butuh ini.
-4. Di iPhone, buka *Settings → Privacy & Security → Developer Mode*, nyalakan, lalu restart. Setelah itu buka *Settings → General → VPN & Device Management* dan percayai Apple ID kamu.
-5. Buka app-nya. Layar pengaturan (launcher) muncul. Tekan **Play**.
+1. Pasang **LiveContainer** ([LiveContainer/LiveContainer](https://github.com/LiveContainer/LiveContainer)) dengan firmware penanda tangan yang bisa menambahkan *Increased Memory Limit*; SideStore, AltStore dan PlumeImpactor bisa menandatanganinya. Minta izin itu untuk **LiveContainer**, bukan untuk game-nya.
+2. Di iPhone, buka *Settings → Privacy & Security → Developer Mode*, nyalakan, lalu restart. Setelah itu buka *Settings → General → VPN & Device Management* dan percayai sertifikat penandatangannya.
+3. Pindahkan file `.ipa` ke iPhone (app **Files**, iCloud Drive, atau AirDrop).
+4. Buka **LiveContainer**, tekan tombol install (**+**), lalu pilih `.ipa` itu. Game muncul sebagai app di dalam LiveContainer.
+5. Buka game dari LiveContainer. Layar pengaturan (launcher) muncul. Tekan **Play**.
 
-Dengan Apple ID gratis, app harus di-sign ulang setiap 7 hari.
+Dengan Apple ID gratis, LiveContainer harus di-sign ulang setiap 7 hari. Folder data dan save di Documents tidak hilang.
 
 ## 6. Kalau ada masalah
 

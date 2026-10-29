@@ -150,7 +150,7 @@ Keep the machine awake during a build. A laptop that sleeps when its lid closes 
 
 ## Install the IPA from Linux
 
-Sideloadly runs only on Windows and macOS. From Linux, [SideStore](https://sidestore.io) on the device or [Impactor](https://github.com/claration/impactor) on the PC signs and installs IPAs with an Apple ID (Impactor needs `usbmuxd`). With a free Apple ID the app must be signed again every 7 days.
+Signing tools are not part of this repository. From Linux, [SideStore](https://sidestore.io) on the device or [Impactor](https://github.com/claration/impactor) on the PC signs and installs IPAs with an Apple ID (Impactor needs `usbmuxd`). With a free Apple ID the app must be signed again every 7 days.
 
 Arceus was tested inside [LiveContainer](https://github.com/LiveContainer/LiveContainer), itself installed with SideStore: copy the IPA to the phone and open it with LiveContainer. There the game runs in LiveContainer's process and gets LiveContainer's memory limit. The memory figure on the launcher screen shows it: about 6 GB with Increased Memory Limit and about 3.4 GB without. The launcher's "Increased Memory Limit" line reads only the app's own signature, which LiveContainer replaces, so go by the memory figure. Arceus was started normally, not in LiveContainer's Multitask mode.
 

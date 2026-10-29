@@ -1,45 +1,43 @@
-# Instalar y firmar el IPA en el iPhone
+# Instalar el IPA en el iPhone con LiveContainer
+
+LiveContainer ejecuta el IPA dentro de su propia app: una sola firma sirve para varios juegos y
+no hay que volver a firmar cada uno. Es la vía que documenta este proyecto.
 
 ## Herramientas (enlaces oficiales)
 
 | Herramienta | Descarga oficial | Para qué |
 |---|---|---|
-| Sideloadly | <https://sideloadly.io/> | firmar e instalar desde el PC (lo más directo) |
-| iTunes + iCloud | <https://www.apple.com/itunes/> · <https://support.apple.com/downloads> | los necesita Sideloadly; instálalos desde Apple, no desde la Microsoft Store |
+| LiveContainer | <https://github.com/LiveContainer/LiveContainer> | ejecutar los IPAs dentro de su app |
 | SideStore | <https://sidestore.io/> | firmar en el propio iPhone, sin PC |
-| LiveContainer | <https://github.com/LiveContainer/LiveContainer> | ejecutar IPAs dentro de otra app |
-| PlumeImpactor | <https://github.com/khcrysalis/PlumeImpactor> | firmador open source para Windows, Linux y macOS (el `plumesign` de la CLI) |
+| AltStore | <https://altstore.io/> | firmar desde el PC con AltServer |
+| PlumeImpactor | <https://github.com/khcrysalis/PlumeImpactor> | firmador open source para Windows, Linux y macOS |
 
-## Lo mínimo
+## 1. Instalar LiveContainer (una sola vez)
 
-1. Instala **[Sideloadly](https://sideloadly.io/)** en el PC. Cuando lo pida, instala también
-   iTunes y iCloud **desde la web de Apple**, no desde la Microsoft Store.
-2. Conecta el iPhone, arrastra el `.ipa` a Sideloadly, escribe tu Apple ID y pulsa **Start**.
-   Deja vacíos los campos *Bundle ID* y *App Name*: así se respetan los del build.
-3. En *Advanced options*, activa **Increased Memory Limit** si aparece. Sin ese permiso iOS
-   deja a la app unos 3,4 GB y cierra los juegos grandes; con él, un iPhone reciente llega a
-   unos 6 GB.
-4. En el iPhone: **Ajustes → Privacidad y seguridad → Modo desarrollador**, reinicia, y luego
-   confía en tu Apple ID en **Ajustes → General → VPN y gestión de dispositivos**.
-5. Abre la app: sale el lanzador, pulsa **Play**.
+LiveContainer no se instala solo: hay que firmarlo con tu Apple ID usando uno de los firmadores
+de arriba, **pidiendo el permiso Increased Memory Limit**
+(`com.apple.developer.kernel.increased-memory-limit`).
+
+- Ese permiso se pide al firmar **LiveContainer**, no el juego. Si LiveContainer no lo lleva,
+  el juego tampoco lo tendrá, por grande que sea el IPA.
+- Sin el permiso, iOS deja a la app unos 3,4 GB y cierra los juegos grandes; con él, un iPhone
+  reciente llega a unos 6 GB.
+- En el iPhone: **Ajustes → Privacidad y seguridad → Modo desarrollador**, reinicia, y confía
+  en el certificado en **Ajustes → General → VPN y gestión de dispositivos**.
 
 Con un Apple ID gratis hay que volver a firmar cada **7 días**.
 
-## LiveContainer
+## 2. Instalar el juego dentro de LiveContainer
 
-LiveContainer ejecuta el IPA dentro de su propia app, así que hereda **su** firma y **sus**
-permisos. Es la forma cómoda de tener varios juegos sin volver a firmar cada uno.
+1. Copia `Juego.ipa` al iPhone: con la app **Files** (iCloud Drive, AirDrop o *En mi iPhone*).
+2. Abre **LiveContainer** y usa el botón de instalar (**+**) para elegir el `.ipa`.
+3. El juego aparece como una app más dentro de LiveContainer. Ábrelo desde ahí.
+4. La primera vez, deja que llegue al menú antes de tocar nada.
 
-- Instala LiveContainer firmado **con Increased Memory Limit**. Si LiveContainer no lo lleva,
-  el juego tampoco lo tendrá, por muy grande que sea el IPA.
-- Dentro de LiveContainer, instala `Juego.ipa` como app contenedora y ábrela desde ahí.
-- Si usas compilación partida (`--split-data`), copia la carpeta `Juego-data` en
-  *Documentos* de **la app del juego dentro de LiveContainer**, no en los Documentos de
-  LiveContainer.
-- El juego se cierra si iOS mata a LiveContainer: no lo cierres desde el selector de apps
-  mientras juegas.
+No cierres LiveContainer desde el selector de apps mientras juegas: iOS mata al anfitrión y con
+él al juego.
 
-### Comprobar el límite de memoria
+## 3. Comprobar la memoria
 
 En `Documentos/log.txt` del juego, la línea de arranque dice cuánta memoria le ha dado iOS:
 
@@ -47,10 +45,19 @@ En `Documentos/log.txt` del juego, la línea de arranque dice cuánta memoria le
 boot: memory limit 6000 MB
 ```
 
-Si pone ~3375 MB, la firma no llevó el permiso: vuelve a firmar con **Increased Memory Limit**
-(o compila con `--entitlements` y firma ese IPA).
+Si pone ~3375 MB, la firma de LiveContainer no llevó el permiso: vuelve a firmarlo con
+**Increased Memory Limit**.
 
-## Qué necesita el dispositivo
+## 4. Compilación partida (IPA pequeño + carpeta de datos)
+
+Si compilaste con `--split-data`, el IPA solo trae la app:
+
+1. Instala el IPA en LiveContainer y ábrelo una vez (avisa de que faltan los datos).
+2. Copia la carpeta `Juego-data` entera en *Documentos* de **la app del juego dentro de
+   LiveContainer**, no en los Documentos de LiveContainer.
+3. Vuelve a abrir el juego.
+
+## 5. Qué necesita el dispositivo
 
 - **iOS / iPadOS 26 o posterior.**
 - **A17 Pro o superior** (iPhone 15 Pro y posteriores) o **iPad con M1 o superior**. Las
@@ -58,7 +65,7 @@ Si pone ~3375 MB, la firma no llevó el permiso: vuelve a firmar con **Increased
   anterior este fork las decodifica en CPU: carga más lenta y más memoria.
 - Espacio libre: el IPA + los datos extraídos (el doble, si no usas compilación partida).
 
-## Ajustes del lanzador
+## 6. Ajustes del lanzador
 
 Antes de *Play*, el lanzador deja elegir:
 
@@ -74,13 +81,7 @@ Antes de *Play*, el lanzador deja elegir:
 Solo se guardan los valores distintos de los probados. Un `env.txt` en *Documentos* del juego
 sigue mandando sobre cualquier ajuste (por ejemplo `DM_SHOW_FPS=0`).
 
-## Copiar archivos al juego
+## 7. Archivos y partidas
 
-Con la app **Files**: *En mi iPhone → <juego>* y ahí están `Documents/` (logs, `env.txt`,
-`saves/`) y, si compraste el juego en la tienda, nada más. En un IPA compilado los datos van
-dentro de la app; solo la compilación partida usa *Documentos*.
-
-## Guardar partidas
-
-Las partidas viven en `Documents/save/` del juego. Cópialas con la app Files antes de borrar
-la app: al reinstalar se pierden.
+Las partidas viven en `Documents/save/` del juego. Cópialas con la app Files antes de borrar la
+app: al reinstalar se pierden.

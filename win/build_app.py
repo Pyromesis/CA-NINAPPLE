@@ -8,7 +8,7 @@
 #   make -n -B dmhost       → the source list of dm/host/Makefile, reproduced in host_sources() (checked against the Makefile text so an upstream change is noticed)
 # Inputs: the same environment as build_ipa.sh (GAME, W, PATCHED, ROMFS, MSL_IOS, AOC, GFXAPI, DM_DISPLAY_NAME, DM_APP_VERSION, DM_BUNDLE_ID, DM_SHOW_FPS, DM_LANG, DM_ENV_FILE, DM_ICON, STD_FONT).
 # Usage: win/build_app.py [output.ipa]   (--prepare-xcode is a Mac-only mode)
-# It never signs: the sideloading tool (Sideloadly, AltStore, ...) signs the IPA, as with the upstream build.
+# It never signs: the sideloading tool (LiveContainer, SideStore, AltStore, ...) signs the IPA, as with the upstream build.
 import concurrent.futures as cf, hashlib, json, os, plistlib, re, shutil, subprocess, sys, time
 from pathlib import Path
 WIN = Path(__file__).resolve().parent

@@ -72,7 +72,7 @@ Licences: Apple's Xcode and SDK agreement covers how its SDK and tools may be us
 python win/build_ipa_windows.py D:\Games\MarioWonder -k D:\keys\prod.keys
 ```
 
-The options are the upstream script's (`-h`). Only `--platform ios` exists here. The IPA is unsigned, as upstream: sign it with your sideloading tool (Sideloadly on Windows, AltStore, …), with the Increased Memory Limit capability where the tool offers it.
+The options are the upstream script's (`-h`). Only `--platform ios` exists here. The IPA is unsigned, as upstream: sign it with your sideloading tool (LiveContainer, SideStore or AltStore), with the Increased Memory Limit capability where the tool offers it.
 
 ### Notes on the tools
 

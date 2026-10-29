@@ -17,7 +17,7 @@ en el iPhone o iPad. Aquí no hay juegos, llaves ni SDK de Apple.
 | Guía | Cuándo |
 |---|---|
 | [Empezar en Windows](docs/ca-ninapple/EMPEZAR.md) | de cero al IPA: requisitos, instalación y comandos |
-| [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | Sideloadly, LiveContainer, memoria y ajustes |
+| [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | LiveContainer, memoria y ajustes |
 | [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]` |
 | [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
 
@@ -221,7 +221,7 @@ These are **upstream's** tested games (on a Mac or an iPhone with upstream NXNat
 - **A Windows 10 or 11 PC (x64)** with free disk space of about twice your NSPs plus 10 GB. The SDK and tools take about 5 GB more.
 - **An iPhone or iPad on iOS / iPadOS 26 or later.** An **A17 Pro or newer** iPhone, or an **M1 or newer** iPad, reads the games' BC-compressed textures on the GPU. On an **A16 or older** chip this fork decodes them on the CPU: it is slower to load, and textures take more memory. Tested on an iPad with an A16.
 - **Your own game dump** (NSP, XCI, NSZ or XCZ: the base game, plus its update and DLC if you have them) and **your own `prod.keys`**.
-- **A free Apple ID**, for two downloads from Apple (below) and for signing with Sideloadly.
+- **A free Apple ID**, for two downloads from Apple (below) and for signing the app.
 
 ## One-time setup
 
@@ -302,7 +302,7 @@ Every build uses the defaults. *Details*, shown from the start, lists them:
 - Bundle ID: `org.nxnativewindows.<title ID>`
 - Language: the game's default
 - IPA: saved next to your game files (*Change* picks another path)
-- Signing: none (Sideloadly signs the IPA when you install it)
+- Signing: none (the signing tool signs the IPA when you install it)
 
 When the folder you pick also holds another game's files, the window hard-links the chosen files into a folder of their own (`<title ID>_nxw`, next to them). The pipeline packs every game file in its folder, so this keeps the games apart, and hard links take no extra disk space.
 
@@ -334,7 +334,7 @@ Only `--platform ios` builds on Windows. `--prepare-xcode` and the Mac platforms
 
 A normal IPA carries the game files, so signing and installing a 3 GB game takes minutes, every 7 days with a free Apple ID. A split build keeps them apart:
 
-- `<Game>.ipa`: only the app (Balatro: 10 MB). Sideloadly signs and installs it in seconds.
+- `<Game>.ipa`: only the app (Balatro: 10 MB). LiveContainer installs it in seconds.
 - `<Game>-data\`: `romfs\`, `msl\` (the shader libraries) and `aoc\` (DLC), hard-linked from the build, so it takes no extra disk space. Its `README.txt` repeats these steps.
 
 Install the IPA, open the app once (it says the game files are missing), then copy the whole `<Game>-data` folder into the app's Documents:
@@ -346,11 +346,13 @@ Close the app fully and open it again. The app looks for `romfs` in Documents an
 
 ## Install the IPA on your iPhone or iPad
 
-1. Install **[Sideloadly](https://sideloadly.io/)** on Windows. When it asks, also install iTunes and iCloud from Apple's website, not the Microsoft Store versions.
-2. Connect the device, drag the `.ipa` onto Sideloadly, enter your Apple ID and press **Start**. Leave Sideloadly's *Bundle ID* and *App Name* fields empty, so the values from the build are kept.
-3. In *Advanced options*, enable **Increased Memory Limit** when Sideloadly offers it. Without it iOS gives the app about 3.4 GB and closes the bigger games; with it a recent device gives about 6 GB.
-4. On the device, turn on **Settings → Privacy & Security → Developer Mode** and restart. Then trust your Apple ID under **Settings → General → VPN & Device Management**.
-5. Open the app: the launcher appears, then press **Play**.
+The signing tool is the one that installs the app. This project documents **LiveContainer**,
+which runs each IPA inside its own app:
+
+1. Install **LiveContainer** ([LiveContainer/LiveContainer](https://github.com/LiveContainer/LiveContainer)) with a signer that lets you add the **Increased Memory Limit** capability (`com.apple.developer.kernel.increased-memory-limit`); SideStore, AltStore and PlumeImpactor can sign it. Ask for that permission on LiveContainer itself: without it iOS gives the app about 3.4 GB and closes the bigger games, with it a recent device gives about 6 GB.
+2. In LiveContainer, install the `.ipa` with the **+** button and pick it from the Files app. The game appears as one more app inside LiveContainer.
+3. On the device, turn on **Settings → Privacy & Security → Developer Mode** and restart. Then trust the signing certificate under **Settings → General → VPN & Device Management**.
+4. Open the game from LiveContainer: the launcher appears, then press **Play**.
 
 With a free Apple ID the app must be signed again every 7 days.
 
@@ -422,7 +424,7 @@ The same driver, `win/build_ipa_windows.py`, also runs on Linux. There it calls 
 | `[RED] provisional game profile …` | The game has no upstream profile: the IPA may not boot. Send the device log (below). |
 | The app closes right after *Play* | Open the **Files** app → *On My iPhone/iPad* → the game → `log.txt` (and `log.prev.txt`), and look at its last lines. [docs/agents/symptoms.md](docs/agents/symptoms.md) indexes known messages. |
 | A 3D game closes while loading on an older device | BC textures are decoded on the CPU there and take more memory: sign with *Increased Memory Limit*. `log.txt` says `BC textures: decoded on the CPU` when the fallback is on. |
-| The name or bundle ID on the device differs from the build | Leave Sideloadly's *App Name* / *Bundle ID* fields empty. |
+| The name or bundle ID on the device differs from the build | Keep the build's *App Name* / *Bundle ID* in the signing tool. |
 | A stage failed | Its full log is in `<title ID>_build\logs\` next to the game files. |
 
 ## Differences from upstream

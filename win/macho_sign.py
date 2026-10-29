@@ -1,5 +1,5 @@
 # An ad-hoc code signature with entitlements for the app's executable, made on Windows (macOS has codesign / ldid). The IPA stays for the player's signing tool to sign
-# (Sideloadly, SideStore, AltStore): those keep the entitlements the executable asks for, filtered by what the Apple ID's App ID allows. An executable with no signature
+# (LiveContainer, SideStore, AltStore): those keep the entitlements the executable asks for, filtered by what the Apple ID's App ID allows. An executable with no signature
 # asks for none, so SideStore installed the app without Increased Memory Limit even after SideInstaller had enabled it for the App ID.
 # The executable must have been linked with -adhoc_codesign (ld64.lld writes an LC_CODE_SIGNATURE and a placeholder signature at the end of __LINKEDIT); this replaces that
 # signature with: a CodeDirectory (SHA-256, 4 KB pages, the main-binary exec segment, special slots for the requirements, the entitlements and their DER form),

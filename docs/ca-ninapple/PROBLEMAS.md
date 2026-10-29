@@ -20,7 +20,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | Se cierra al cargar una fase | Memoria o un recurso que el host aún no traga | Últimas líneas de `log.txt`; prueba `--split-data` y baja *Render scale* |
 | `[RED] this IPA uses vX (…), a version game profile … was not brought up on` | El perfil registrado es de otra versión | Es un aviso, no un error: el IPA usa un perfil derivado. La ruta soportada es poner la actualización que el perfil espera en la carpeta del juego |
 | `doctor.py` muestra `MISSING` | Falta una herramienta | Instala lo que dice su línea `get it:` o fija la ruta en `win\toolchain.json` |
-| La app se llama distinto o el bundle ID no es el del build | Sideloadly los sobreescribió | Deja vacíos *App Name* y *Bundle ID* en Sideloadly |
+| La app se llama distinto o el bundle ID no es el del build | El firmador los sobreescribió | Mantén el nombre y el bundle ID del build en la herramienta de firma |
 | Va lento, se calienta y baja de FPS | GPU al límite | *Render scale* al 75 %, *Console mode: Handheld*, *Upscaling: Standard* |
 
 ## Pantalla negra con música

@@ -535,9 +535,9 @@ class App(tk.Tk):
             data = Path(self.out_ipa).with_name(Path(self.out_ipa).stem + '-data')
             if self.split and data.is_dir():
                 self.res_path.configure(text=f'{self.out_ipa}\n{data}')
-                self.res_hint.configure(text="Install the IPA with Sideloadly, then copy the data folder into the app's Documents\n(Apple Devices app > Files, or the Files app). README.txt inside it explains.")
+                self.res_hint.configure(text="Install the IPA in LiveContainer, then copy the data folder into the app's Documents\n(Files app, or the Apple Devices app on Windows). README.txt inside it explains.")
             else:
-                self.res_path.configure(text=self.out_ipa); self.res_hint.configure(text='Sign and install it with Sideloadly.')
+                self.res_path.configure(text=self.out_ipa); self.res_hint.configure(text='Install it in LiveContainer.')
             self.result.pack(fill='x', pady=(14, 0), before=self.det if self.details else None)
             self._write(f'\nIPA ready  →  {self.out_ipa}\n', 'ok')
         else:
