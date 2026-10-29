@@ -27,15 +27,30 @@ de arriba, **pidiendo el permiso Increased Memory Limit**
 
 Con un Apple ID gratis hay que volver a firmar cada **7 días**.
 
+En iOS 26 LiveContainer firma los juegos en modo **JIT-less** y necesita un **certificado
+importado**. Sin certificado el `.ipa` se copia, pero el juego no arranca. Se importa en
+**LiveContainer → Ajustes → Certificado**, desde SideStore/AltStore o con tu `.p12` y su
+contraseña. Es un paso aparte de firmar LiveContainer: el permiso de memoria va en la firma de
+LiveContainer; el certificado sirve para firmar cada juego dentro.
+
 ## 2. Instalar el juego dentro de LiveContainer
 
 1. Copia `Juego.ipa` al iPhone: con la app **Files** (iCloud Drive, AirDrop o *En mi iPhone*).
+   También puedes dejarlo en los *Documentos* de LiveContainer por USB (copia de archivos de la
+   app) y elegirlo desde el botón **+**.
 2. Abre **LiveContainer** y usa el botón de instalar (**+**) para elegir el `.ipa`.
 3. El juego aparece como una app más dentro de LiveContainer. Ábrelo desde ahí.
 4. La primera vez, deja que llegue al menú antes de tocar nada.
 
 No cierres LiveContainer desde el selector de apps mientras juegas: iOS mata al anfitrión y con
 él al juego.
+
+## 2b. Instalar directo, sin LiveContainer
+
+Si no quieres configurar el certificado de LiveContainer, **[PlumeImpactor](https://github.com/khcrysalis/PlumeImpactor)**
+firma e instala el `.ipa` directamente con tu Apple ID. El IPA ya pide *Increased Memory Limit*
+al firmarse, así que el juego recibe la memoria extra igual. Es la vía que se usó para probar
+BALL x PIT v0 en un iPhone 16 Pro Max.
 
 ## 3. Comprobar la memoria
 

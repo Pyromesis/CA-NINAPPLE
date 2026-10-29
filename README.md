@@ -350,9 +350,10 @@ The signing tool is the one that installs the app. This project documents **Live
 which runs each IPA inside its own app:
 
 1. Install **LiveContainer** ([LiveContainer/LiveContainer](https://github.com/LiveContainer/LiveContainer)) with a signer that lets you add the **Increased Memory Limit** capability (`com.apple.developer.kernel.increased-memory-limit`); SideStore, AltStore and PlumeImpactor can sign it. Ask for that permission on LiveContainer itself: without it iOS gives the app about 3.4 GB and closes the bigger games, with it a recent device gives about 6 GB.
-2. In LiveContainer, install the `.ipa` with the **+** button and pick it from the Files app. The game appears as one more app inside LiveContainer.
-3. On the device, turn on **Settings → Privacy & Security → Developer Mode** and restart. Then trust the signing certificate under **Settings → General → VPN & Device Management**.
-4. Open the game from LiveContainer: the launcher appears, then press **Play**.
+2. In LiveContainer, import a **signing certificate** (Settings → Certificate, from SideStore/AltStore or a `.p12` with its password): on iOS 26 LiveContainer signs every guest app JIT-less and cannot run one without it.
+3. Install the `.ipa` with the **+** button and pick it from the Files app. The game appears as one more app inside LiveContainer.
+4. On the device, turn on **Settings → Privacy & Security → Developer Mode** and restart. Then trust the signing certificate under **Settings → General → VPN & Device Management**.
+5. Open the game from LiveContainer: the launcher appears, then press **Play**.
 
 With a free Apple ID the app must be signed again every 7 days.
 
