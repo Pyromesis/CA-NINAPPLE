@@ -88,6 +88,16 @@ plumesign sign --package "C:\Juegos\BALLxPIT\BallXPit.ipa" --apple-id -o "C:\Jue
 Si el juego se compiló con **Increased Memory Limit** desactivado (`--no-entitlements`), el IPA
 no pedirá el permiso y iOS le dará unos 3,4 GB. Para BALL x PIT v0 se dejó activado.
 
+Para comprobarlo antes de instalar, sin abrir el juego: descomprime el IPA, saca el binario de
+`Payload/<App>.app/<App>` y pide sus permisos.
+
+```powershell
+plumesign mach-o --entitlements "C:\Temp\DmIOS"
+```
+
+Tiene que salir `com.apple.developer.kernel.increased-memory-limit`. Si no aparece, el IPA se
+firmó sin el permiso y hay que volver a compilarlo con él.
+
 ### A2. Instalar
 
 ```powershell
@@ -230,6 +240,39 @@ el selector de apps mientras juegas: iOS mata al anfitrión y con él al juego.
 | La firma de LiveContainer falla por *Application Group* | vuelve a ejecutar `plumesign sign`; crea los grupos uno a uno |
 | LiveContainer instala el IPA pero no lo abre | falta el certificado de B2, o caducó la firma de 7 días |
 | Pantalla negra con música | mira `[RED] shader ... is not in the shader map` en `log.txt`; si no aparece, es el arranque, no los shaders |
+
+### Detalles de Windows que hacen fallar comandos correctos
+
+Ninguno de estos es un fallo del teléfono ni del IPA. Son trampas de PowerShell.
+
+- **El comando termina en rojo y con código 1 aunque haya funcionado.** `go-ios` escribe sus
+  trazas por *stderr*, y PowerShell las pinta como error. Lo que vale es la última línea:
+  `installation successful`, `Process launched`, `Saved signed package to:`. Si aparece, ignorad
+  el color y el código de salida.
+- **No metas comillas dentro del patrón de `Select-String`.** Algo como
+  `Select-String -Pattern "percentComplete\":100"` rompe el parseo de PowerShell
+  (`The string is missing the terminator`). Filtra por una palabra sin comillas
+  (`Select-String "installation successful"`) o quita el filtro y lee la salida entera.
+- **`ios fsync pull --dstPath` crea una carpeta, no un archivo.** Si apuntas a
+  `C:\Temp\ball-log.txt`, queda una carpeta `ball-log.txt` con `log.txt` dentro. Usa un nombre de
+  carpeta y lee `C:\Temp\ball-log\log.txt`.
+- **El túnel hay que dejarlo en otra ventana.** `ios tunnel start --userspace` no vuelve: se queda
+  sirviendo. Si lo ejecutas en la misma consola, el siguiente comando no corre.
+- **Un `ios` viejo ocupa el puerto 60105.** Si sale
+  `bind: Only one usage of each socket address`, cierra el proceso `ios` en el Administrador de
+  tareas (o `Stop-Process -Name ios -Force`) y vuelve a empezar. El túnel también se cae solo si
+  desconectas el cable o bloqueas el teléfono: es normal, se relanza.
+- **Rutas con espacios, entre comillas.** `--package "C:\Mis Juegos\BallXPit.ipa"`. Sin comillas,
+  PowerShell parte el argumento y PlumeImpactor dice que no encuentra el paquete.
+
+## Antes de dar por terminado
+
+1. `ios apps --list` muestra el juego con la versión correcta (`1.251` en BALL x PIT v0).
+2. El juego abre y llega al menú sin pantalla negra.
+3. `log.txt` tiene `launcher: Increased Memory Limit on (the app's signature)`.
+4. `log.txt` tiene `on-screen ... 300 frames, dropped 0` y un `p50` cercano a 16,67 ms.
+5. Si algo falla, guarda el `log.txt` completo antes de tocar nada y mira
+   [PROBLEMAS.md](PROBLEMAS.md); ahí está el diagnóstico de shaders, memoria y arranque.
 
 ## Caso real: BALL x PIT v0 (1.251)
 
