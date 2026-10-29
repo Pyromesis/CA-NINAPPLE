@@ -124,6 +124,7 @@ def materialize(out, links):
             dst = out / rel
             src = (dst.parent / target) if not target.startswith('/') else None
             if src is None: print(f'  link {rel} → {target}: absolute, skipped'); continue
+            src = Path(os.path.normpath(src))   # collapse '..': the raw path can pass MAX_PATH while the real one fits
             if dst.exists(): continue
             if not src.exists(): left.append((rel, target)); continue
             if src.is_dir(): shutil.copytree(src, dst)

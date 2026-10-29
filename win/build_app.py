@@ -82,7 +82,7 @@ def frameworks(sdk, files):
 # ---- compile + link ----
 def compile_all(clang, sdk, files, incs, obj_dir, extra_defs):
     target = f'arm64-apple-ios{tc.setting("ios_deployment", tc.IOS_DEPLOYMENT)}'
-    common = ['-target', target, '-isysroot', str(sdk), '-Os', '-mcpu=apple-a18', '-w', '-fno-common', '-DNS_BLOCK_ASSERTIONS=1', *extra_defs] + [f'-I{i}' for i in incs]
+    common = ['-target', target, '-isysroot', str(sdk), '-Os', '-mcpu=apple-a17', '-w', '-fno-common', '-DNS_BLOCK_ASSERTIONS=1', *extra_defs] + [f'-I{i}' for i in incs] + ['-F', str(sdk / 'System/Library/SubFrameworks')] + ['-F', str(sdk / 'System/Library/Frameworks')]
     obj_dir.mkdir(parents=True, exist_ok=True)
     jobs, objs = [], []
     for f in files:

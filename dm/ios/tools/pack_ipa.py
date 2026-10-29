@@ -165,7 +165,7 @@ class Zip:
         left, at = csize, info.header_offset + 30 + nl + el
         h = self.local(e, method, crc, csize, usize, usize >= L32 or csize >= L32)
         while left:
-            b = os.pread(old.fileno(), min(CHUNK, left), at)
+            _fd = old.fileno(); os.lseek(_fd, at, os.SEEK_SET); b = os.read(_fd, min(CHUNK, left))
             if not b: sys.exit(f'[RED] pack_ipa: the old IPA ended while {e.name} was copied from it')
             self.w(b); left -= len(b); at += len(b)
         self.central(e, h, method, crc, csize, usize)
@@ -213,7 +213,8 @@ def match(e, row, info, old, idx, apfs):   # one header comparison for both the 
         if (info.compress_type, info.CRC, info.compress_size, info.file_size) != (method, crc, csize, usize): return None
     h = header(e, method, crc, csize, usize, usize >= L32 or csize >= L32)
     if info.header_offset < 0 or info.header_offset + len(h[0]) + csize > idx['ipa'][0]: return None
-    if os.pread(old.fileno(), len(h[0]) + len(data), info.header_offset) != h[0] + data: return None
+    _fd = old.fileno(); os.lseek(_fd, info.header_offset, os.SEEK_SET)
+    if os.read(_fd, len(h[0]) + len(data)) != h[0] + data: return None
     return h
 
 

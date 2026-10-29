@@ -28,6 +28,8 @@ class ReadImage(unittest.TestCase):
         self.data = b'\x03\x02\x23\x07' + b'ABC\0' * 20000
         (self.src / 'data/archive').write_bytes(self.data)
         (self.src / 'data/zero').touch()
+        self.binary = b'header' + b'\x1a\r\n' + bytes(range(256)) + b'\x1a\r\n' * 100
+        (self.src / 'data/binary').write_bytes(self.binary)
         (self.src / 'data/test.vert').write_text('#version 320 es\nvoid main() {}')
         with zipfile.ZipFile(self.src / 'data/game.zip', 'w') as z: z.writestr('member', b'archive member')
         self.image = self.root / 'RomFS.img'; romfs_image.pack(self.src, self.image)
@@ -60,6 +62,12 @@ class ReadImage(unittest.TestCase):
         with romfs.open(self.virtual / 'data/zero', 'rb') as f: self.assertEqual(f.read(), b'')
         with romfs.open(self.virtual / 'data/game.zip', 'rb') as f, zipfile.ZipFile(f) as z:
             self.assertEqual(z.read('member'), b'archive member')
+
+    def test_binary_file_with_ctrl_z_and_crlf_reads_back_whole(self):
+        # A Windows host that opens the image without O_BINARY reads it as text: the CRT stops at the first 0x1A and turns CRLF into LF. The games' serialized
+        # files hit one a few bytes in (BALL x PIT's sharedassets1.assets at 78 bytes), which left every Unity Shader object unread.
+        self.assertEqual((self.virtual / 'data/binary').read_bytes(), self.binary)
+        with romfs.open(self.virtual / 'data/binary', 'rb') as f: self.assertEqual(f.read(), self.binary)
 
     def test_build_scanners_discover_the_same_inputs_from_image_and_folder(self):
         import gl_shaders
