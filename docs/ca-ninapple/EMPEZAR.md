@@ -13,7 +13,20 @@ funcionamiento interno) está en [`../../README.md`](../../README.md).
 | Llaves | tu propio `prod.keys` |
 | Apple ID | gratis, para descargar dos cosas de Apple y para firmar |
 
-## 2. Instalación (una sola vez)
+## 2. Qué instalar y de dónde bajarlo
+
+| Programa | Descarga oficial | Para qué |
+|---|---|---|
+| Python 3.10 o posterior | <https://www.python.org/downloads/> | ejecuta el pipeline. Marca **Add python.exe to PATH** al instalarlo |
+| Git para Windows | <https://git-scm.com/download/win> | clonar y actualizar el repositorio |
+| LLVM | <https://github.com/llvm/llvm-project/releases> | clang y lld, que compilan el host |
+| .NET SDK 10 | <https://dotnet.microsoft.com/download> | compila `nx_extract` |
+| Vulkan SDK | <https://vulkan.lunarg.com/sdk/home> | `glslangValidator` y las cabeceras de Vulkan |
+| Zstandard | <https://github.com/facebook/zstd/releases> | descomprime los `.zs` / `.zst` de algunos juegos |
+| Metal Developer Tools for Windows | <https://developer.apple.com/download/all/> | `metal.exe` y `metal-tt`, que compilan los shaders |
+| Xcode 26 o 27 | <https://developer.apple.com/download/all/> | solo se usa su `iPhoneOS.sdk` |
+
+Los cinco primeros van en una tacada desde PowerShell:
 
 ```powershell
 winget install --id LLVM.LLVM -e
@@ -23,10 +36,7 @@ winget install --id Meta.Zstandard -e
 python -m pip install lz4 capstone fonttools pillow "backports.zstd; python_version < '3.14'"
 ```
 
-Python 3.10 o posterior desde [python.org](https://www.python.org/downloads/), marcando
-**Add python.exe to PATH**.
-
-De [developer.apple.com/download](https://developer.apple.com/download/all/) (con tu Apple ID):
+De Apple, con tu Apple ID, en <https://developer.apple.com/download/all/>:
 
 1. **Metal Developer Tools for Windows** (5.x o 6.x). Instálalo donde quieras.
 2. **Xcode 26 o 27** (`Xcode_27.1.xip`, ~2 GB). Solo se usa su SDK de iPhoneOS. Se extrae una vez:

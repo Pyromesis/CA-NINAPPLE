@@ -1,5 +1,15 @@
 # Instalar y firmar el IPA en el iPhone
 
+## Herramientas (enlaces oficiales)
+
+| Herramienta | Descarga oficial | Para qué |
+|---|---|---|
+| Sideloadly | <https://sideloadly.io/> | firmar e instalar desde el PC (lo más directo) |
+| iTunes + iCloud | <https://www.apple.com/itunes/> · <https://support.apple.com/downloads> | los necesita Sideloadly; instálalos desde Apple, no desde la Microsoft Store |
+| SideStore | <https://sidestore.io/> | firmar en el propio iPhone, sin PC |
+| LiveContainer | <https://github.com/LiveContainer/LiveContainer> | ejecutar IPAs dentro de otra app |
+| PlumeImpactor | <https://github.com/khcrysalis/PlumeImpactor> | firmador open source para Windows, Linux y macOS (el `plumesign` de la CLI) |
+
 ## Lo mínimo
 
 1. Instala **[Sideloadly](https://sideloadly.io/)** en el PC. Cuando lo pida, instala también

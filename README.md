@@ -27,6 +27,9 @@ En un paso, desde PowerShell en la raíz del repositorio:
 .\build.ps1 -Game "C:\Juegos\BALLxPIT"
 ```
 
+Descargas oficiales de todo lo que hace falta (Python, Git, LLVM, .NET, Vulkan SDK,
+Zstandard, Metal Developer Tools y Xcode) en la primera guía.
+
 El resto de este documento es el manual técnico del fork de Windows, en inglés.
 
 <p align="center">
