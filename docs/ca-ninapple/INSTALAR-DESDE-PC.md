@@ -33,7 +33,7 @@ En el PC:
   ```
 - **PlumeImpactor** (`plumesign.exe`), el firmador open source:
   <https://github.com/khcrysalis/PlumeImpactor/releases>. El ejecutable de Windows se llama
-  `plumesign.exe`. No hace falta Sideloadly; además LiveContainer no lo admite.
+  `plumesign.exe`. Es el único firmador que hace falta.
 - Un **Apple ID** (vale una cuenta gratuita) y el iPhone con **Modo desarrollador** activo:
   *Ajustes → Privacidad y seguridad → Modo desarrollador*, reiniciar, y confiar en el
   certificado en *Ajustes → General → VPN y gestión de dispositivos*.
