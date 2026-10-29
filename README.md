@@ -18,6 +18,7 @@ en el iPhone o iPad. Aquí no hay juegos, llaves ni SDK de Apple.
 |---|---|
 | [Empezar en Windows](docs/ca-ninapple/EMPEZAR.md) | de cero al IPA: requisitos, instalación y comandos |
 | [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | LiveContainer, memoria y ajustes |
+| [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md) | paso a paso completo: firmar, instalar y comprobar, con errores y soluciones |
 | [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]` |
 | [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
 

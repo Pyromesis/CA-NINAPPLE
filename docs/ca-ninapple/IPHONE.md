@@ -3,6 +3,10 @@
 LiveContainer ejecuta el IPA dentro de su propia app: una sola firma sirve para varios juegos y
 no hay que volver a firmar cada uno. Es la vía que documenta este proyecto.
 
+> Si prefieres los comandos exactos de principio a fin, con los errores que ya salieron y su
+> solución, está todo junto en **[INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md)**. Esta página
+> explica el porqué de cada paso; esa otra es la receta que se copia y se pega.
+
 ## Herramientas (enlaces oficiales)
 
 | Herramienta | Descarga oficial | Para qué |
@@ -50,7 +54,8 @@ No cierres LiveContainer desde el selector de apps mientras juegas: iOS mata al 
 Si no quieres configurar el certificado de LiveContainer, **[PlumeImpactor](https://github.com/khcrysalis/PlumeImpactor)**
 firma e instala el `.ipa` directamente con tu Apple ID. El IPA ya pide *Increased Memory Limit*
 al firmarse, así que el juego recibe la memoria extra igual. Es la vía que se usó para probar
-BALL x PIT v0 en un iPhone 16 Pro Max.
+BALL x PIT v0 en un iPhone 16 Pro Max. Los comandos están en
+**[INSTALAR-DESDE-PC.md, ruta A](INSTALAR-DESDE-PC.md#ruta-a-instalación-directa-la-que-se-usó)**.
 
 ## 3. Comprobar la memoria
 

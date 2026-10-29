@@ -26,3 +26,11 @@ title.keys
 *.xcz
 *.ipa
 
+# Firmas de Apple: son tuyas y caducan, no van al repositorio
+*.p12
+*.pfx
+*.mobileprovision
+*.cer
+*.pem
+*.provisionprofile
+
