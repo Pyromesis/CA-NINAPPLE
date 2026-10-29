@@ -213,14 +213,32 @@ ios fsync --app=com.kdt.livecontainer.<TEAM_ID> push --srcPath="C:\Juegos\BALLxP
 teléfono, abre LiveContainer, pulsa **+** y elige `BallXPit.ipa`; también puedes dejarlo en la
 app **Files** y elegirlo desde ahí. Espera a que termine: son 800 MB y tarda un par de minutos.
 
-Cuando el juego ya esté instalado dentro de LiveContainer, borra la copia para recuperar espacio:
+Ahí hay **dos copias**, y borrar solo el `.ipa` no libera el espacio de la segunda:
+
+1. El `.ipa` que copiaste: `/Documents/BallXPit.ipa`.
+2. La app ya instalada, que LiveContainer extrae a
+   `/Documents/Applications/<bundle>.app/` (con su `romfs.img` y sus `msl/`).
+
+Para quitarlo todo:
 
 ```powershell
+# 1. el instalador
 ios fsync --app=com.kdt.livecontainer.<TEAM_ID> rm --path=/Documents/BallXPit.ipa
+
+# 2. la app instalada dentro de LiveContainer (bundle ID con el equipo al final)
+ios fsync --app=com.kdt.livecontainer.<TEAM_ID> rm --r --path=/Documents/Applications/org.nxnativewindows.010086a022444000.<TEAM_ID>.app
+
+# 3. comprobar que no queda nada
+ios fsync --app=com.kdt.livecontainer.<TEAM_ID> tree --path=/Documents/Applications
 ```
 
-Si el teléfono no está conectado, bórralo desde **Files → En mi iPhone → LiveContainer**.
-El juego instalado no se toca.
+El `--r` es obligatorio para la app: sin él, `rm` no borra una carpeta. La comprobación tiene que
+quedar vacía. También puedes hacerlo desde LiveContainer manteniendo pulsado el juego y eligiendo
+**Eliminar**; es lo mismo.
+
+Si el teléfono no está conectado, borra el `.ipa` desde **Files → En mi iPhone → LiveContainer**,
+pero la app instalada se quita desde LiveContainer, no desde Files. El juego que corre en la
+pantalla de inicio (instalación directa) no se toca.
 
 ### B4. Abrir el juego
 
@@ -239,6 +257,8 @@ el selector de apps mientras juegas: iOS mata al anfitrión y con él al juego.
 | `listen tcp 127.0.0.1:60105: bind: Only one usage...` | quedó un `ios tunnel` viejo; ciérralo con el Administrador de tareas y vuelve a empezar |
 | La firma de LiveContainer falla por *Application Group* | vuelve a ejecutar `plumesign sign`; crea los grupos uno a uno |
 | LiveContainer instala el IPA pero no lo abre | falta el certificado de B2, o caducó la firma de 7 días |
+| Borré el `.ipa` de LiveContainer y el espacio sigue ocupado | LiveContainer extrajo la app a `/Documents/Applications/<bundle>.app`; bórrala con `rm --r` o desde LiveContainer |
+| `rm` no borra una carpeta | falta `--r`: `ios fsync ... rm --r --path=...` |
 | Pantalla negra con música | mira `[RED] shader ... is not in the shader map` en `log.txt`; si no aparece, es el arranque, no los shaders |
 
 ### Detalles de Windows que hacen fallar comandos correctos
@@ -286,13 +306,17 @@ Ninguno de estos es un fallo del teléfono ni del IPA. Son trampas de PowerShell
 - Avisos que no impiden jugar: `174` claves de shader que no están en el mapa (el perfil es de
   otra versión) y alguna librería `_bp.metallib` que falta. Si un efecto concreto se ve mal,
   guarda el `log.txt` y revisa esas líneas.
+- Limpieza final: se borraron el `BallXPit.ipa` de `/Documents` y la app extraída en
+  `/Documents/Applications/org.nxnativewindows.010086a022444000.<TEAM_ID>.app/`;
+  `/Documents/Applications` quedó vacío. El juego de la pantalla de inicio sigue instalado.
 
 ## Limpieza
 
 Después de instalar, puedes borrar:
 
 - el IPA firmado (`*-signed.ipa`), porque se regenera firmando el original;
-- la copia dentro de LiveContainer (B3);
+- **las dos copias** de LiveContainer (B3): el `.ipa` de `/Documents` y la app extraída en
+  `/Documents/Applications/`;
 - los `log.txt` que hayas copiado al PC.
 
 **No borres** el IPA sin firmar que salió del build: es el original que se vuelve a firmar cada
