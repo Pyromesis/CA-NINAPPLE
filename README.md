@@ -1,12 +1,33 @@
-# NXNative for Windows
+# CA-NINAPPLE — NXNative para Windows
 
 Build **nxnative** IPAs on a **Windows 10/11 PC, with no Mac**. Use your own legally dumped game files (NSP / XCI) and your own `prod.keys`. Pick them in a window, press **Build IPA**, and sideload the IPA to your iPhone or iPad.
 
-This repository is a fork of [seedds/nxnative](https://github.com/seedds/nxnative). nxnative is not an emulator: the game's own arm64 code runs directly on the Apple chip, and the Switch graphics are rebuilt on Metal. Upstream builds IPAs only on a Mac with Xcode. This fork adds a Windows build path in [`win/`](win/) and changes as little of upstream as it can. Nothing from any game is in this repository, and the project has no ties to Nintendo, Apple or any game publisher.
+This repository is a fork of [zenvyzenshiro/NXNativeWindows](https://github.com/zenvyzenshiro/NXNativeWindows), itself a fork of [seedds/nxnative](https://github.com/seedds/nxnative). nxnative is not an emulator: the game's own arm64 code runs directly on the Apple chip, and the Switch graphics are rebuilt on Metal. Upstream builds IPAs only on a Mac with Xcode. The Windows fork adds a Windows build path in [`win/`](win/) and changes as little of upstream as it can. Nothing from any game is in this repository, and the project has no ties to Nintendo, Apple or any game publisher. Authorship, scope and what this copy adds: [NOTICE.md](NOTICE.md).
 
 > Panduan langkah demi langkah dalam Bahasa Indonesia: [win/TUTORIAL.md](win/TUTORIAL.md).
 > On Linux the same build runs with native tools and Apple's Metal compiler under Wine: [win/LINUX.md](win/LINUX.md).
 > Upstream's own README (games gallery, Mac packing, playing) is kept as [README.nxnative.md](README.nxnative.md).
+
+## Empieza aquí (español)
+
+CA-NINAPPLE es esta distribución: el mismo NXNative for Windows, con las guías en español y
+los arreglos de esta copia. Compilas en tu PC el IPA de **tus propios** juegos y lo instalas
+en el iPhone o iPad. Aquí no hay juegos, llaves ni SDK de Apple.
+
+| Guía | Cuándo |
+|---|---|
+| [Empezar en Windows](docs/ca-ninapple/EMPEZAR.md) | de cero al IPA: requisitos, instalación y comandos |
+| [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | Sideloadly, LiveContainer, memoria y ajustes |
+| [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]` |
+| [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
+
+En un paso, desde PowerShell en la raíz del repositorio:
+
+```powershell
+.\build.ps1 -Game "C:\Juegos\BALLxPIT"
+```
+
+El resto de este documento es el manual técnico del fork de Windows, en inglés.
 
 <p align="center">
   <img src="docs/images/windows/gui-start.png" width="32%" alt="The builder window, before picking files">

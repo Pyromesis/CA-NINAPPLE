@@ -15,3 +15,14 @@ win/build/
 __pycache__/
 win/sdk/extract.log
 win/gui_settings.json
+
+# Nunca se sube nada de un juego, ni llaves, ni IPAs: este repositorio es solo el programa
+prod.keys
+title.keys
+*.keys
+*.nsp
+*.xci
+*.nsz
+*.xcz
+*.ipa
+
