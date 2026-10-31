@@ -8,6 +8,9 @@
 .EXAMPLE
   .\build.ps1 -Game "C:\Juegos\BALLxPIT" -SplitData -Entitlements
 
+.EXAMPLE
+  .\build.ps1 -Game "C:\Juegos\TotK" -RomfsSeparate
+
 .NOTES
   Envuelve win\build_ipa_windows.py: pone la consola en UTF-8 (sin esto los
   simbolos del progreso rompen la salida con UnicodeEncodeError en una consola
@@ -25,6 +28,7 @@ param(
     [string]$Out,
 
     [switch]$SplitData,
+    [switch]$RomfsSeparate,
     [switch]$Entitlements,
     [switch]$Check,
 
@@ -65,6 +69,7 @@ if ($Check) {
 $argv = @($driver, $Game, '-k', $Keys)
 if ($Out) { $argv += @('-o', $Out) }
 if ($SplitData) { $argv += '--split-data' }
+if ($RomfsSeparate) { $argv += @('--romfs', 'separate') }
 if ($Entitlements) { $argv += '--entitlements' }
 if ($Extra) { $argv += $Extra }
 

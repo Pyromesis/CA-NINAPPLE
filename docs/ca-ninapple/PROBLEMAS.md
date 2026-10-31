@@ -22,6 +22,8 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | `doctor.py` muestra `MISSING` | Falta una herramienta | Instala lo que dice su línea `get it:` o fija la ruta en `win\toolchain.json` |
 | La app se llama distinto o el bundle ID no es el del build | El firmador los sobreescribió | Mantén el nombre y el bundle ID del build en la herramienta de firma |
 | Va lento, se calienta y baja de FPS | GPU al límite | *Render scale* al 75 %, *Console mode: Handheld*, *Upscaling: Standard* |
+| El build muere con `a split build copies the RomFS as a folder…` | El XCI se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con un XCI grande](#el-build-partido-falla-con-un-xci-grande) |
+| `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
 
 ## Pantalla negra con música
 
@@ -79,6 +81,87 @@ Qué implica:
 - Aun así, puede haber diferencias de comportamiento que solo se ven jugando.
 
 Si tienes la versión registrada, úsala: es la ruta con la que el juego se probó.
+
+## El build partido falla con un XCI grande
+
+Síntoma, al final de una compilación larga (extracción y shaders ya hechos):
+
+```
+FAIL: a split build copies the RomFS as a folder, and this extraction is one RomFS image (RomFS.img): build without --split-data
+```
+
+Causa: al extraer un **XCI**, el RomFS queda como **una sola imagen**
+(`<title ID>_build\extract\vX\RomFS.img`), que es lo que lee el host. `--split-data` construye
+la carpeta de datos copiando el RomFS archivo por archivo, así que el empaquetador de Windows
+(`win/build_app.py`) rechazaba esa combinación en vez de partir la imagen.
+
+Solución: usa **`--romfs separate`**, no `--split-data`. El IPA se queda pequeño (app y
+shaders) y el RomFS se copia **una vez** a `Documents/romfs.img`:
+
+```powershell
+.\build.ps1 -Game "C:\Juegos\TotK" -RomfsSeparate
+```
+
+Sin el script:
+
+```powershell
+$env:PYTHONUTF8 = '1'; $env:PYTHONIOENCODING = 'utf-8'
+python win\build_ipa_windows.py "C:\Juegos\TotK" -k "C:\Juegos\TotK\prod.keys" --romfs separate
+```
+
+Por qué este modo y no la carpeta: un RomFS así ronda los **300.000 archivos** (Tears of the
+Kingdom: 304.000, 17 GB). Copiarlos uno a uno por el servicio de archivos del iPhone agota los
+descriptores abiertos; una imagen se copia de una vez y se puede verificar entera.
+
+Qué cambia en el IPA:
+
+- El RomFS **no** va dentro. En su lugar la app lleva `romfs.id`, con el tamaño y el hash del
+  índice de la imagen (`dm/tools/romfs_image.py --identity`).
+- Al arrancar solo acepta un `Documents/romfs.img` con esa identidad. Si es de otra versión o
+  la copia se cortó, lo dice en `log.txt` (`[RED] boot: …`) y con un aviso en pantalla, y no
+  usa datos incorrectos.
+- Los shaders (`msl/`) sí van dentro del IPA: no hay que copiarlos aparte.
+
+El arreglo está en [`win/build_app.py`](../../win/build_app.py): `--romfs separate` activa
+`DM_COPY_ROMFS=NO` en el pipeline, y el port de Windows ahora lo respeta. Antes lo ignoraba y
+volvía a meter el RomFS; la única forma de evitarlo era `--split-data`, que es justo lo que
+falla con una imagen. El modo se reutiliza: si el build falla al empaquetar, relanzarlo conserva
+la extracción y los shaders ya compilados.
+
+Copia la imagen con la app ya instalada: en Windows sirve `ios fsync` (go-ios) o el panel de
+archivos de LiveContainer; el archivo debe llamarse **`romfs.img`** dentro de *Documentos* de la
+app. En macOS, `scripts/push_romfs.sh <UDID> <bundle ID> "<...>\RomFS.img"`.
+
+### Nombres de archivo que el build necesita
+
+El build identifica cada paquete por el **nombre**:
+
+| Archivo | Etiqueta | Por qué |
+|---|---|---|
+| Base `.xci` | `[0100F2C0115B6000]` | un XCI no trae ticket; el título sale de la etiqueta de 16 hex |
+| Actualización `.nsp` | `[v655360]` | la versión sale de `[vN]`; el ticket da el título, no la versión |
+
+```text
+The Legend of Zelda Tears of the Kingdom [0100F2C0115B6000][v0][Base].xci
+The Legend of Zelda Tears of the Kingdom [0100F2C0115B6800][v655360][UPD].nsp
+```
+
+Sin la etiqueta, el archivo se ignora o se toma por otro paquete. El número de la actualización
+es la versión en decimal: `1.4.2` es `655360`; `1.4.3` es `720896`.
+
+## UnicodeEncodeError al imprimir el progreso
+
+```
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 11: character maps to <undefined>
+```
+
+Una consola de Windows en cp1252 no puede escribir el `✓` del progreso. No es un fallo del
+build: la extracción y los shaders ya hechos quedan en caché. Usa `build.ps1`, que fuerza
+UTF-8, o define las variables antes de llamar al driver:
+
+```powershell
+$env:PYTHONUTF8 = '1'; $env:PYTHONIOENCODING = 'utf-8'
+```
 
 ## Memoria
 

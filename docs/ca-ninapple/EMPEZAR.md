@@ -117,6 +117,7 @@ Opciones útiles (todas las de upstream con `-h`):
 | `-l es` | idioma del juego que se empaqueta |
 | `--show-fps` / `--no-show-fps` | contador de FPS por defecto |
 | `--split-data` | IPA pequeño + carpeta de datos (ver abajo) |
+| `--romfs separate` / `-RomfsSeparate` | IPA pequeño + un solo `Documents/romfs.img` (para XCI grandes, ver abajo) |
 | `--entitlements` | firma ad-hoc pidiendo **Increased Memory Limit** |
 
 ### Compilación partida (IPA pequeño + carpeta de datos)
@@ -130,6 +131,12 @@ Firmar e instalar 3 GB cada 7 días con un Apple ID gratis es incómodo. Con `--
 Instalas el IPA, abres la app una vez (avisa de que faltan los datos) y copias la carpeta
 `Juego-data` entera dentro de *Documentos* de la app, con la app **Files** o con el panel de
 LiveContainer. Al volver a abrir, el juego arranca.
+
+Si el juego viene de un **XCI grande**, la extracción es una sola imagen (`RomFS.img`) y
+`--split-data` no puede construir la carpeta. Usa entonces `-RomfsSeparate` (o
+`--romfs separate`): el IPA lleva la app y los shaders, el RomFS se copia una vez como
+`Documents/romfs.img`, y la app comprueba que la imagen sea la de esa versión. Lo explica
+[`PROBLEMAS.md`](PROBLEMAS.md#el-build-partido-falla-con-un-xci-grande).
 
 ## 5. Instalarlo en el iPhone
 

@@ -273,6 +273,7 @@ def main():
     if not (romfs / marker).exists(): die(f'no RomFS at {romfs} (missing {marker})')
     if image and env.get('NXW_MODS_ROMFS'): die('mods\' RomFS folders are laid over a RomFS folder, and this extraction is one RomFS image (RomFS.img)')
     if image and env.get('NXW_SPLIT_DATA', '') not in ('', '0'): die('a split build copies the RomFS as a folder, and this extraction is one RomFS image (RomFS.img): build without --split-data')
+    no_romfs = env.get('DM_COPY_ROMFS') == 'NO'   # build_ipa.sh: the game files stay out of the IPA, which carries the image's identity and takes Documents/romfs.img
     if env.get('NXW_MODS_ROMFS'):   # mods' RomFS folders (win/mods.py): hard links of the game's files with the mods' laid over them
         import mods
         romfs = mods.overlay_romfs(romfs, env['NXW_MODS_ROMFS'].split(os.pathsep), w / 'build/romfs_mods', log=t)
@@ -383,6 +384,14 @@ def main():
         plistlib.dump(pl, f, fmt=plistlib.FMT_BINARY)
     (app / 'PkgInfo').write_bytes(b'APPL????')
 
+    if no_romfs:   # build_ipa.sh's DM_COPY_ROMFS=NO: the app takes Documents/romfs.img (scripts/push_romfs.sh), and only an image of this version (dm/host/romfs_identity.h)
+        if image:
+            rid = py(DM / 'tools/romfs_image.py', '--identity', str(romfs), game, version, pkg or '')
+            (app / 'romfs.id').write_text(rid + '\n', encoding='utf-8')
+            t(f'game files: separate (DM_COPY_ROMFS=NO), left out of the app; identity {rid}')
+        else:
+            t('[RED] the extraction holds a RomFS folder, not an image: no romfs.id; push_romfs.sh packs the folder first')
+
     has_aoc = bool(aoc and aoc.is_dir() and any(aoc.iterdir()))
     if has_aoc: t('add-on content: ' + ' '.join(sorted(p.name for p in aoc.iterdir())))
     split = env.get('NXW_SPLIT_DATA', '')
@@ -401,7 +410,7 @@ def main():
     else:
         maps.append(f'Payload/DmIOS.app/msl/{msldir}={msl_ios / msldir}')
         if has_aoc: maps.append(f'Payload/DmIOS.app/aoc={aoc}')
-        maps.append(f'Payload/DmIOS.app/romfs.img={romfs}' if image else f'Payload/DmIOS.app/romfs={romfs}')   # main.m romfs_locate opens <App>/romfs.img (build_ipa.sh)
+        if not no_romfs: maps.append(f'Payload/DmIOS.app/romfs.img={romfs}' if image else f'Payload/DmIOS.app/romfs={romfs}')   # main.m romfs_locate opens <App>/romfs.img (build_ipa.sh)
     t('pack IPA (already-compressed game files stored, everything else deflated)')
     r = subprocess.run([sys.executable, str(IOS / 'tools/pack_ipa.py'), str(out_ipa), '--store', ':'.join(gp('zip_store').split(':')),
                         '--exec', 'Payload/DmIOS.app/DmIOS', '--skip', 'Payload/DmIOS.app/msl', '--skip', 'Payload/DmIOS.app/aoc', '--skip', 'Payload/DmIOS.app/romfs', '--skip', 'Payload/DmIOS.app/romfs.img',

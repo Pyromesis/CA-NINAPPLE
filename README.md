@@ -20,7 +20,7 @@ en el iPhone o iPad. Aquí no hay juegos, llaves ni SDK de Apple.
 | [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | LiveContainer, memoria y ajustes |
 | [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md) | paso a paso completo: firmar, instalar y comprobar, con errores y soluciones |
 | [Mandos](docs/ca-ninapple/MANDOS.md) | Xbox y PlayStation por Bluetooth, mapeo de botones y problemas |
-| [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]` |
+| [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]`, builds partidos con XCI |
 | [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
 
 En un paso, desde PowerShell en la raíz del repositorio:
