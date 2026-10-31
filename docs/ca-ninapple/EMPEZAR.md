@@ -69,6 +69,31 @@ C:\Juegos\BALLxPIT\
     prod.keys          <- el tuyo; no se comparte ni se sube
 ```
 
+### Formatos que acepta
+
+| Formato | ¿Sirve? | Notas |
+|---|---|---|
+| `.nsp` | **sí** | base, actualización y DLC |
+| `.xci` | **sí** | volcado de cartucho; sirve como base |
+| `.nsz` | **sí** | se descomprime a `.nsp` con `nsz -D` |
+| `.xcz` | **sí** | se descomprime a `.xci` con `nsz -D` |
+| `.ncp` | no existe | no es un formato de Switch; seguramente querías decir `.nsp` |
+
+Los cuatro primeros se pueden mezclar en la misma carpeta. El build elige la **versión más
+nueva** que encuentre y agrupa base, actualización y DLC por título.
+
+Tres avisos que evitan errores:
+
+- **Un XCI solo trae la versión base.** Si el XCI es un volcado «1G+1U» (base y actualización en
+  el mismo cartucho), la actualización que lleva dentro **no se usa**: para compilar esa versión
+  hay que poner también el NSP de la actualización en la carpeta.
+- **Una sola base por carpeta.** No mezcles el NSP base y el XCI base del mismo juego; elige uno.
+- **NSZ/XCZ necesitan `nsz`.** Instálalo con `pip install nsz` o ten un `nsz` 5.0 o posterior en
+  el `PATH`. La conversión se guarda en `<title ID>_build\nsp\` y se reutiliza.
+
+Los archivos que empiezan por `._` (restos de macOS en discos exFAT) y los de tamaño cero se
+ignoran solos.
+
 ## 4. Compilar
 
 ```powershell
