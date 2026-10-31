@@ -24,6 +24,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | Va lento, se calienta y baja de FPS | GPU al límite | *Render scale* al 75 %, *Console mode: Handheld*, *Upscaling: Standard* |
 | El build muere con `a split build copies the RomFS as a folder…` | El XCI se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con un XCI grande](#el-build-partido-falla-con-un-xci-grande) |
 | `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
+| `ios install` termina con `ExtractionFailed` | El firmador dejó el ejecutable en `0644` | `python win\fix_ipa_mode.py <IPA firmado>` y reinstala. Ver [La instalación falla con ExtractionFailed](#la-instalación-falla-con-extractionfailed) |
 
 ## Pantalla negra con música
 
@@ -148,6 +149,39 @@ The Legend of Zelda Tears of the Kingdom [0100F2C0115B6800][v655360][UPD].nsp
 
 Sin la etiqueta, el archivo se ignora o se toma por otro paquete. El número de la actualización
 es la versión en decimal: `1.4.2` es `655360`; `1.4.3` es `720896`.
+
+## La instalación falla con `ExtractionFailed`
+
+Síntoma al instalar el IPA firmado:
+
+```
+{"level":"ERROR","msg":"failed writing","err":"invalid progressUpdate, missing InstallProgressDict field:+map[Error:ExtractionFailed]"}
+```
+
+Causa: algunos firmadores reconstruyen el ZIP y escriben **todos** los archivos con modo `0644`,
+incluido el ejecutable principal. iOS extrae `Payload/<App>.app/<App>` con el modo Unix que hay
+en el directorio central del ZIP; si no tiene permiso de ejecución, cancela la instalación.
+
+Compruébalo sin instalar:
+
+```powershell
+python -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1]); i=z.getinfo('Payload/DmIOS.app/DmIOS'); print(oct(i.external_attr>>16))" "ruta\Juego-signed.ipa"
+```
+
+Si sale `0o100644`, es esto. Repara el IPA (solo cambia los atributos del ZIP; la firma de
+dentro no se toca) y vuelve a instalar:
+
+```powershell
+python win\fix_ipa_mode.py "ruta\Juego-signed.ipa"
+ios install --path "ruta\Juego-signed.ipa"
+```
+
+El script lee `CFBundleExecutable` del `Info.plist` y pone `0755` en el binario principal. Es
+idempotente: si ya está bien, no cambia nada.
+
+Antes de esto puede aparecer un fallo distinto, `failed writing … Read: failed to read message
+length: EOF`: es una conexión que se cortó (pantalla bloqueada o cable). Reintenta con el iPhone
+desbloqueado.
 
 ## UnicodeEncodeError al imprimir el progreso
 

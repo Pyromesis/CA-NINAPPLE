@@ -98,6 +98,16 @@ plumesign mach-o --entitlements "C:\Temp\DmIOS"
 Tiene que salir `com.apple.developer.kernel.increased-memory-limit`. Si no aparece, el IPA se
 firmó sin el permiso y hay que volver a compilarlo con él.
 
+Si `ios install` falla con `ExtractionFailed`, el firmador reescribió el ZIP y dejó el binario
+sin permiso de ejecución. Repáralo y reinstala:
+
+```powershell
+python win\fix_ipa_mode.py "C:\Juegos\TotK\ZeldaTearsOfTheKingdom-signed.ipa"
+ios install --path "C:\Juegos\TotK\ZeldaTearsOfTheKingdom-signed.ipa"
+```
+
+Lo explica [`PROBLEMAS.md`](PROBLEMAS.md#la-instalación-falla-con-extractionfailed).
+
 ### A2. Instalar
 
 ```powershell
@@ -250,6 +260,8 @@ el selector de apps mientras juegas: iOS mata al anfitrión y con él al juego.
 | Síntoma | Causa y solución |
 |---|---|
 | `plumesign device -i` dice `Device ID not found` | fallo de esa cuenta gratuita; usa `ios install --path ...` |
+| `ios install` falla con `ExtractionFailed` | el firmador dejó el binario en `0644`: `python win\fix_ipa_mode.py <IPA firmado>` y reinstala |
+| `ios install` falla con `failed writing … EOF` | conexión cortada o pantalla bloqueada; reintenta con el iPhone desbloqueado |
 | `ios list` devuelve `{"deviceList":[]}` | cable, pantalla bloqueada o «Confiar» sin aceptar |
 | `ios file` pide túnel o imagen de desarrollo | usa `ios fsync` para los Documents de una app; no instales certificados raíz para evitarlo |
 | `ios image auto` falla con `x509: certificate signed by unknown authority` | el PC no confía en la raíz de Apple; no hace falta para instalar. No añadas certificados al almacén de Windows por esto |
