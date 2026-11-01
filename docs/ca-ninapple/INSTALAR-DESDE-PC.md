@@ -120,9 +120,38 @@ La salida termina en:
 level=INFO msg="installation successful" module=go-ios/zipconduit
 ```
 
-`plumesign device -i` también instala, pero en algunas cuentas gratuitas falla con
-`Device ID not found`; `ios install` no tiene ese problema. Si `ios install` se queda parado,
-mira que el teléfono siga desbloqueado y conectado.
+`plumesign device -i` también instala, pero su `-u` espera el id numérico de usbmuxd, no el UDID
+(ver A2b): con el UDID falla con `Device ID … not found`. Para instalar, `ios install` es más
+directo. Si `ios install` se queda parado, mira que el teléfono siga desbloqueado y conectado.
+
+### A2b. Instalar en un segundo iPhone
+
+Cada iPhone tiene que estar registrado en el equipo de firma y el IPA re-firmado para él: el
+perfil guarda los UDID y el de un solo teléfono no sirve en otro. El modo desarrollador es aparte y
+se activa una vez por teléfono: `ios devmode reveal` hace visible Ajustes → Privacidad y seguridad
+→ Modo desarrollador; iOS pide reiniciar y confirmar con el código.
+
+PlumeSign registra el teléfono y firma con `--register-and-install`, pero **su `--udid` no es el
+UDID**: `get_device_for_id` compara el argumento con el `DeviceID` numérico de usbmuxd. Si le pasas
+el UDID real termina en `Other error: Device ID 00008150-… not found` aunque el teléfono esté
+conectado. Saca ese número con el iPhone que vas a usar conectado y desbloqueado:
+
+```powershell
+python win\usbmuxd_id.py
+# 10    USB    ...C01C
+```
+
+y pásalo tal cual:
+
+```powershell
+plumesign sign --package "C:\Juegos\TotK\ZeldaTearsOfTheKingdom.ipa" --apple-id `
+  --register-and-install --udid 10 -o "C:\Juegos\TotK\ZeldaTearsOfTheKingdom-signed.ipa"
+```
+
+Con dos iPhone conectados, desconecta el que no vas a usar o elige el `DeviceID` cuya cola del UDID
+coincida. El número cambia al reconectar el cable: vuelve a leerlo si el comando dice que no
+encuentra el dispositivo. PlumeSign instala al terminar; si esa instalación falla, el IPA firmado
+sigue en `-o` y se instala con `ios install --path ...` (A2).
 
 ### A3. Abrir y comprobar
 
@@ -259,7 +288,7 @@ el selector de apps mientras juegas: iOS mata al anfitrión y con él al juego.
 
 | Síntoma | Causa y solución |
 |---|---|
-| `plumesign device -i` dice `Device ID not found` | fallo de esa cuenta gratuita; usa `ios install --path ...` |
+| `plumesign … --udid <UDID>` dice `Device ID … not found` | Su `--udid` espera el id numérico de usbmuxd, no el UDID | `python win\usbmuxd_id.py` y pasa ese número. Ver [Instalar en un segundo iPhone](#a2b-instalar-en-un-segundo-iphone) |
 | `ios install` falla con `ExtractionFailed` | el firmador dejó el binario en `0644`: `python win\fix_ipa_mode.py <IPA firmado>` y reinstala |
 | `ios install` falla con `failed writing … EOF` | conexión cortada o pantalla bloqueada; reintenta con el iPhone desbloqueado |
 | `ios list` devuelve `{"deviceList":[]}` | cable, pantalla bloqueada o «Confiar» sin aceptar |

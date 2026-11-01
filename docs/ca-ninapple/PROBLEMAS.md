@@ -25,6 +25,8 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | El build muere con `a split build copies the RomFS as a folder…` | El XCI se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con un XCI grande](#el-build-partido-falla-con-un-xci-grande) |
 | `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
 | `ios install` termina con `ExtractionFailed` | El firmador dejó el ejecutable en `0644` | `python win\fix_ipa_mode.py <IPA firmado>` y reinstala. Ver [La instalación falla con ExtractionFailed](#la-instalación-falla-con-extractionfailed) |
+| `plumesign … --udid <UDID>` dice `Device ID … not found` | Su `--udid` espera el id numérico de usbmuxd, no el UDID | `python win\usbmuxd_id.py` y pasa ese número. Ver [Instalar en un segundo iPhone](INSTALAR-DESDE-PC.md#a2b-instalar-en-un-segundo-iphone) |
+| La tele no recibe la imagen del juego | La escena de pantalla externa no llegó a conectar | Busca `front end: TV output registered` en `log.txt`. Ver [TV y AirPlay](TV-AIRPLAY.md) |
 
 ## Pantalla negra con música
 
@@ -210,6 +212,20 @@ boot: memory limit 6000 MB
 
 Si el juego muere justo después de esa línea, o al entrar a una fase, es memoria. Prueba
 `--split-data` (los datos no van dentro de la app), *Render scale* más bajo y *Handheld*.
+
+## La televisión no muestra el juego
+
+El juego sale a la tele con **Centro de control → Duplicar pantalla** (AirPlay) o con un
+adaptador HDMI. En `log.txt` tienen que salir estas dos líneas:
+
+```
+front end: TV output registered (an external display gets the game at 16:9)
+front end: external display connected: 1920 x 1080 points, 1.00x
+```
+
+Si la primera no aparece, el IPA es de antes de este cambio. Si aparece la primera pero no la
+segunda, AirPlay no está iniciado o la tele no lo admite. Está todo, con el resto de síntomas
+(bandas, 4:3, imagen borrosa, vuelta al iPhone), en **[TV-AIRPLAY.md](TV-AIRPLAY.md)**.
 
 ## El juego no arranca y `log.txt` está vacío
 
