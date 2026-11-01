@@ -153,6 +153,28 @@ coincida. El número cambia al reconectar el cable: vuelve a leerlo si el comand
 encuentra el dispositivo. PlumeSign instala al terminar; si esa instalación falla, el IPA firmado
 sigue en `-o` y se instala con `ios install --path ...` (A2).
 
+Al abrirla por primera vez, iOS puede negarse con **Desarrollador no confiable** (o *Untrusted
+Developer*). No es un fallo de la firma y **no se arregla abriendo la app otra vez**: hay que
+confiar en el certificado una vez por teléfono, en *Ajustes → General → VPN y gestión de
+dispositivos → Apple Development: <cuenta>* → **Confiar**. Después se abre desde la pantalla de
+inicio.
+
+### A2c. Copiar los datos del juego (build partida)
+
+Un IPA hecho con `--romfs separate` (`-RomfsSeparate`) no lleva el RomFS: pesa ~900 MB y la app
+espera `Documents/romfs.img`. Sin él sale **game data needed** y el juego no arranca. Copia la
+imagen que dejó la extracción (17 GB en TotK):
+
+```powershell
+ios fsync --app=org.nxnativewindows.0100f2c0115b6000.<TEAM_ID> push `
+  --srcPath="C:\Juegos\TotK\0100F2C0115B6000_build\extract\v655360\RomFS.img" `
+  --dstPath=/Documents/romfs.img
+```
+
+Deja el iPhone desbloqueado y cierra el juego durante la copia (10–20 min por USB). Al terminar,
+ábrelo otra vez: la app comprueba tamaño e índice contra su `romfs.id` y solo usa esa imagen. Si la
+copia se corta, repítela; un archivo incompleto se rechaza en el arranque.
+
 ### A3. Abrir y comprobar
 
 Lo normal es abrir la app desde la pantalla de inicio. Para lanzarla desde el PC hace falta un
@@ -289,6 +311,8 @@ el selector de apps mientras juegas: iOS mata al anfitrión y con él al juego.
 | Síntoma | Causa y solución |
 |---|---|
 | `plumesign … --udid <UDID>` dice `Device ID … not found` | Su `--udid` espera el id numérico de usbmuxd, no el UDID | `python win\usbmuxd_id.py` y pasa ese número. Ver [Instalar en un segundo iPhone](#a2b-instalar-en-un-segundo-iphone) |
+| Al abrir sale «Desarrollador no confiable» | Falta confiar en el certificado de desarrollo en ese teléfono | Ajustes → General → VPN y gestión de dispositivos → Apple Development: <cuenta> → Confiar; una vez por teléfono. Abrir la app otra vez no lo arregla. Ver [A2b](#a2b-instalar-en-un-segundo-iphone) |
+| Sale «game data needed» y no arranca | El IPA es de build partida y falta `Documents/romfs.img` | Cópialo con `ios fsync push` (17 GB en TotK). Ver [A2c](#a2c-copiar-los-datos-del-juego-build-partida) |
 | `ios install` falla con `ExtractionFailed` | el firmador dejó el binario en `0644`: `python win\fix_ipa_mode.py <IPA firmado>` y reinstala |
 | `ios install` falla con `failed writing … EOF` | conexión cortada o pantalla bloqueada; reintenta con el iPhone desbloqueado |
 | `ios list` devuelve `{"deviceList":[]}` | cable, pantalla bloqueada o «Confiar» sin aceptar |

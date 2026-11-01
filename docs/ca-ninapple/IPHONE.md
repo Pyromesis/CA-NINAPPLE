@@ -27,7 +27,9 @@ de arriba, **pidiendo el permiso Increased Memory Limit**
 - Sin el permiso, iOS deja a la app unos 3,4 GB y cierra los juegos grandes; con él, un iPhone
   reciente llega a unos 6 GB.
 - En el iPhone: **Ajustes → Privacidad y seguridad → Modo desarrollador**, reinicia, y confía
-  en el certificado en **Ajustes → General → VPN y gestión de dispositivos**.
+  en el certificado en **Ajustes → General → VPN y gestión de dispositivos**. Si al abrir el
+  juego sale **Desarrollador no confiable**, falta ese paso: se confía una vez y no se arregla
+  reintentando la app.
 
 Con un Apple ID gratis hay que volver a firmar cada **7 días**.
 

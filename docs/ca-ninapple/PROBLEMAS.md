@@ -26,6 +26,8 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
 | `ios install` termina con `ExtractionFailed` | El firmador dejó el ejecutable en `0644` | `python win\fix_ipa_mode.py <IPA firmado>` y reinstala. Ver [La instalación falla con ExtractionFailed](#la-instalación-falla-con-extractionfailed) |
 | `plumesign … --udid <UDID>` dice `Device ID … not found` | Su `--udid` espera el id numérico de usbmuxd, no el UDID | `python win\usbmuxd_id.py` y pasa ese número. Ver [Instalar en un segundo iPhone](INSTALAR-DESDE-PC.md#a2b-instalar-en-un-segundo-iphone) |
+| Al abrir sale «Desarrollador no confiable» | Falta confiar en el certificado de desarrollo en ese teléfono | Ajustes → General → VPN y gestión de dispositivos → Apple Development: <cuenta> → Confiar; una vez por teléfono. Abrir la app otra vez no lo arregla |
+| Sale «game data needed» y no arranca | El IPA es de build partida y falta `Documents/romfs.img` | Cópialo con `ios fsync push` (17 GB en TotK). Ver [Copiar los datos del juego](INSTALAR-DESDE-PC.md#a2c-copiar-los-datos-del-juego-build-partida) |
 | La tele no recibe la imagen del juego | La escena de pantalla externa no llegó a conectar | Busca `front end: TV output registered` en `log.txt`. Ver [TV y AirPlay](TV-AIRPLAY.md) |
 
 ## Pantalla negra con música
