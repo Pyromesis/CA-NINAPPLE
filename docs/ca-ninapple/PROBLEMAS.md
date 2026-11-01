@@ -236,6 +236,21 @@ segunda, AirPlay no está iniciado o la tele no lo admite. Está todo, con el re
 - En LiveContainer, comprueba que estás mirando los *Documentos de la app del juego*, no los
   de LiveContainer.
 
+## El build dice `nx_extract built without an executable`
+
+Pasa si llamas directamente a `scripts\build_ipa_from_nsp.py` en Windows: ese script espera un
+`nx_extract` sin extensión, pero .NET en Windows genera `nx_extract.exe`. No es un fallo de la
+extracción ni de las llaves; el paso de Windows no se sustituye solo. Usa el driver de Windows:
+
+```powershell
+.\build.ps1 -Game "C:\Juegos\Pokemon" -Keys "C:\ruta\a\prod.keys"
+# o, sin el envoltorio:
+python win\build_ipa_windows.py "C:\Juegos\Pokemon" -k "C:\ruta\a\prod.keys"
+```
+
+`build.ps1` además pone la consola en UTF-8, así que evita el `UnicodeEncodeError` de la sección
+anterior. El script de `scripts\` sigue siendo el correcto en macOS y Linux.
+
 ## Recopilar un informe
 
 ```powershell
