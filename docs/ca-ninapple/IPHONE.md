@@ -106,6 +106,15 @@ Antes de *Play*, el lanzador deja elegir:
 Solo se guardan los valores distintos de los probados. Un `env.txt` en *Documentos* del juego
 sigue mandando sobre cualquier ajuste (por ejemplo `DM_SHOW_FPS=0`).
 
+## 6b. Verlo en la televisión
+
+El juego sale a 16:9 en una tele con AirPlay o por cable HDMI, y el iPhone queda como mando
+(el gamepad en pantalla y los FPS se quedan en el teléfono). Viene activado en todos los
+juegos: **Centro de control → Duplicar pantalla** y elige la tele.
+
+Cómo comprobarlo en el log, cómo apagarlo (`DM_TV_OUT=0`) y qué hacer si no conecta:
+**[TV-AIRPLAY.md](TV-AIRPLAY.md)**.
+
 ## 7. Archivos y partidas
 
 Las partidas viven en `Documents/save/` del juego. Cópialas con la app Files antes de borrar la

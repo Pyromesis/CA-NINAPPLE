@@ -188,10 +188,12 @@ void front_ios_boot(void) {   // Called by front_ios.m once the window and Metal
 }
 int front_ios_boot_ok(void) { return g_boot_ok; }
 
+UISceneConfiguration *front_ios_tv_configuration(void);   // front_ios.m: the delegate that puts the game picture on the TV (iOS 27 scene accessory)
 @interface App : UIResponder <UIApplicationDelegate>
 @end
 @implementation App
 - (UISceneConfiguration *)application:(UIApplication *)a configurationForConnectingSceneSession:(UISceneSession *)s options:(UISceneConnectionOptions *)o {
+    if ([s.role isEqualToString:UIWindowSceneSessionRoleExternalDisplayNonInteractive]) return front_ios_tv_configuration();   // never the game window: front_ios.m moves the one game picture there
     return [[UISceneConfiguration alloc] initWithName:@"Default" sessionRole:s.role];
 }
 @end
@@ -202,6 +204,7 @@ int front_ios_boot_ok(void) { return g_boot_ok; }
 @end
 @implementation SceneDelegate
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)o {
+    if (![session.role isEqualToString:UIWindowSceneSessionRoleApplication]) return;   // an external display has DmTVSceneDelegate (front_ios.m); the game window is the phone's only
     self.window = [[UIWindow alloc] initWithWindowScene:(UIWindowScene *)scene];
     self.window.rootViewController = front_ios_root();
     [self.window makeKeyAndVisible];

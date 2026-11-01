@@ -15,6 +15,10 @@ int dm_mem_guard(void);   // nvn_mtl.m: the memory guard level, shown in the HUD
 
 UIView *dm_gamepad_view(CGRect frame);
 void dm_gamepad_reset(void);
+static void front_tv_register(UIViewController *vc);
+static void front_tv_attach(void);
+static void front_tv_connect(UIWindowScene *scene);
+static void front_tv_disconnect(UIWindowScene *scene);
 void front_ios_boot(void);
 int front_ios_boot_ok(void);
 const char *front_ios_boot_message(void);   // main.m: why a build that keeps the game files off the IPA found none usable (NULL = the generic hint)
@@ -39,9 +43,19 @@ static int g_hud;   // DM_METAL_HUD: the counter grows into a HUD (front_ios_fps
     }
     return self;
 }
+// The layer follows the screen the view is on: 3x on the iPhone, 1x/2x on an AirPlay or HDMI display. Without this the drawable stayed 3x the TV's points (5760x3240 for a
+// 1920x1080 TV), which wastes memory and makes the game render at the wrong size.
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    UIScreen *s = self.window.screen;
+    CAMetalLayer *l = (CAMetalLayer *)self.layer;
+    if (s && l.contentsScale != s.nativeScale) { l.contentsScale = s.nativeScale; [self setNeedsLayout]; }
+}
 - (void)layoutSubviews {
     [super layoutSubviews];
     CAMetalLayer *l = (CAMetalLayer *)self.layer;
+    UIScreen *s = self.window.screen;
+    if (s && l.contentsScale != s.nativeScale) l.contentsScale = s.nativeScale;
     l.drawableSize = CGSizeMake(self.bounds.size.width * l.contentsScale, self.bounds.size.height * l.contentsScale);
 }
 @end
@@ -52,6 +66,8 @@ static int g_hud;   // DM_METAL_HUD: the counter grows into a HUD (front_ios_fps
 @property (nonatomic, strong) UILabel *fps;
 @property (nonatomic) BOOL launched;
 - (void)startGame;
+- (void)gameToTV:(UIView *)host;
+- (void)gameToPhone;
 @end
 static DmRootVC *g_root;
 static void launcher_done(void) { [g_root startGame]; }
@@ -81,19 +97,41 @@ static void launcher_done(void) { [g_root startGame]; }
     self.fps = front_ios_fps_label();   // above the pad, which hides while a controller is connected
     if (self.fps) [self.view addSubview:self.fps];
     [self.view setNeedsLayout]; [self.view layoutIfNeeded];
+    front_tv_register(self);   // the external-display scene may connect right away when AirPlay mirroring is already on
+    front_tv_attach();
     UIApplication.sharedApplication.idleTimerDisabled = YES;
     front_ios_boot();
 }
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
     CGRect b = self.view.bounds; if (!self.game) return;
-    CGFloat w = b.size.width, h = b.size.height;   // Fit 16:9 into the whole screen
-    if (w / h > 16.0 / 9.0) w = h * 16.0 / 9.0; else h = w * 9.0 / 16.0;
-    self.game.frame = CGRectMake(floor((b.size.width - w) / 2), floor((b.size.height - h) / 2), w, h);
+    if (self.game.superview == self.view) {   // on the phone; on the TV the game view fills the external window
+        CGFloat w = b.size.width, h = b.size.height;   // Fit 16:9 into the whole screen
+        if (w / h > 16.0 / 9.0) w = h * 16.0 / 9.0; else h = w * 9.0 / 16.0;
+        self.game.frame = CGRectMake(floor((b.size.width - w) / 2), floor((b.size.height - h) / 2), w, h);
+    }
     if (self.fps) {   // the top row's free stretch: right of DmGamepad.m's L3 key (102 + 17 of its units from the safe edge), level with − / + (22 units down); u is its unit
         CGRect s = UIEdgeInsetsInsetRect(b, self.view.safeAreaInsets); CGFloat u = MIN(b.size.height / 430.0, 1.3);
         self.fps.frame = CGRectMake(floor(CGRectGetMinX(s) + 130 * u), floor(CGRectGetMinY(s) + 22 * u - 11), g_hud ? 330 : 64, 22);
     }
+}
+// TV output: the game picture moves to the external display's window (16:9, so it fills the TV) and the phone keeps the pad.
+- (void)gameToTV:(UIView *)host {
+    if (!self.game || !host || self.game.superview == host) return;
+    [self.game removeFromSuperview];
+    self.game.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    self.game.frame = host.bounds;
+    [host addSubview:self.game];
+    [self.game setNeedsLayout]; [self.game layoutIfNeeded];
+    LOG("front end: game picture on the external display (%.0f x %.0f points)", host.bounds.size.width, host.bounds.size.height);
+}
+- (void)gameToPhone {
+    if (!self.game || self.game.superview == self.view) return;
+    [self.game removeFromSuperview];
+    self.game.autoresizingMask = UIViewAutoresizingNone;
+    [self.view insertSubview:self.game atIndex:0];   // under the pad
+    [self.view setNeedsLayout]; [self.view layoutIfNeeded];
+    LOG("front end: game picture back on the phone screen");
 }
 - (void)viewDidAppear:(BOOL)a {
     [super viewDidAppear:a];
@@ -111,6 +149,78 @@ static void launcher_done(void) { [g_root startGame]; }
 - (BOOL)prefersStatusBarHidden { return YES; }
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations { return UIInterfaceOrientationMaskLandscape; }
 @end
+
+// TV output (iOS 27): the system presents a noninteractive scene on the external display when the app registers a scene accessory. The game picture moves to that
+// window, which is 16:9 at 1920x1080, so it fills the TV; the phone keeps the pad and the frame-rate counter. AirPlay mirroring is what makes the display appear:
+// Control Center → Screen Mirroring. The accessory is registered for every game (the shared front end), on by default; Documents/env.txt's DM_TV_OUT=0 turns it off.
+static UIWindowScene *g_tv_scene;
+static UIWindow *g_tv_window;
+static UIViewController *g_tv_host;
+static id g_tv_registration;
+
+static void front_tv_attach(void) {
+    if (!g_tv_host || !g_root || !g_root.game) return;
+    if (g_root.game.superview != g_tv_host.view) [g_root gameToTV:g_tv_host.view];
+}
+
+// The scene the accessory creates. willConnectToSession: runs on the main thread; the game picture moves here as soon as both the display and the game exist.
+@interface DmTVSceneDelegate : UIResponder <UIWindowSceneDelegate>
+@end
+@implementation DmTVSceneDelegate
+- (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)o {
+    (void)session; (void)o;
+    if ([scene isKindOfClass:UIWindowScene.class]) front_tv_connect((UIWindowScene *)scene);
+}
+- (void)sceneDidDisconnect:(UIScene *)scene {
+    if ([scene isKindOfClass:UIWindowScene.class]) front_tv_disconnect((UIWindowScene *)scene);
+}
+@end
+
+// The scene configuration for an external display: the accessory carries it on iOS 27, and App (main.m) returns it when the system asks which delegate an external-display
+// session gets (the iOS 26 route, where the scene still connects on its own). No Info.plist entry is needed in either case.
+UISceneConfiguration *front_ios_tv_configuration(void) {
+    UISceneConfiguration *cfg = [UISceneConfiguration new];
+    cfg.delegateClass = DmTVSceneDelegate.class;
+    return cfg;
+}
+
+static void front_tv_register(UIViewController *vc) {
+    if (g_tv_registration || !vc) return;
+    const char *e = getenv("DM_TV_OUT");
+    if (e && atoi(e) == 0) { LOG("front end: TV output off (DM_TV_OUT=0)"); return; }
+    if (@available(iOS 27.0, *)) {
+        UISceneAccessory *acc = [UISceneAccessory externalNonInteractiveSceneAccessoryWithConfiguration:front_ios_tv_configuration()];
+        UISceneAccessoryRegistration *reg = [vc registerSceneAccessory:acc];
+        reg.enabled = YES;   // the game picture is always meant for the TV when one is connected (Documents/env.txt's DM_TV_OUT=0 registers nothing)
+        g_tv_registration = reg;
+        LOG("front end: TV output %s", reg ? "registered (an external display gets the game at 16:9)" : "could not be registered");
+    } else {
+        LOG("front end: TV output needs iOS 27 (this is iOS %s)", UIDevice.currentDevice.systemVersion.UTF8String);
+    }
+}
+
+static void front_tv_connect(UIWindowScene *scene) {
+    if (!scene || g_tv_scene) return;
+    g_tv_scene = scene;
+    g_tv_window = [[UIWindow alloc] initWithWindowScene:scene];
+    g_tv_window.frame = scene.screen.bounds;   // the TV's whole area (1920x1080 points at 1x on most televisions)
+    g_tv_host = [UIViewController new];
+    g_tv_host.view.backgroundColor = UIColor.blackColor;
+    g_tv_host.view.frame = g_tv_window.bounds;
+    g_tv_window.rootViewController = g_tv_host;
+    g_tv_window.hidden = NO;   // not makeKeyAndVisible: the phone stays the key window, so alerts and the keyboard stay on it
+    LOG("front end: external display connected: %.0f x %.0f points, %.2fx", scene.screen.bounds.size.width, scene.screen.bounds.size.height, scene.screen.nativeScale);
+    front_tv_attach();
+}
+
+static void front_tv_disconnect(UIWindowScene *scene) {
+    if (!scene || scene != g_tv_scene) return;
+    if (g_root && g_root.game && g_root.game.superview != g_root.view) [g_root gameToPhone];
+    g_tv_window.hidden = YES;
+    g_tv_window = nil; g_tv_host = nil; g_tv_scene = nil;
+    LOG("front end: external display disconnected; the game picture is back on the phone");
+}
+
 UIViewController *front_ios_root(void) { return [DmRootVC new]; }
 
 // Thermal state and screen brightness for the power and present rows every 300 frames (hle_nvn.c; its weak defaults return -1 on the Mac). thermalState: 0 nominal, 1 fair, 2 serious, 3 critical.

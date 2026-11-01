@@ -20,6 +20,7 @@ en el iPhone o iPad. Aquí no hay juegos, llaves ni SDK de Apple.
 | [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | LiveContainer, memoria y ajustes |
 | [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md) | paso a paso completo: firmar, instalar y comprobar, con errores y soluciones |
 | [Mandos](docs/ca-ninapple/MANDOS.md) | Xbox y PlayStation por Bluetooth, mapeo de botones y problemas |
+| [TV y AirPlay](docs/ca-ninapple/TV-AIRPLAY.md) | el juego a 16:9 en la tele; el iPhone queda de mando |
 | [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]`, builds partidos con XCI |
 | [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
 
@@ -87,6 +88,7 @@ What this fork adds on top of upstream, for every game:
 | **Memory** | The app asks for Increased Memory Limit in its own signature, so SideStore keeps it when the App ID allows it; a texture memory saver frees the textures' second copy (automatic when memory runs low); a HUD shows fps, GPU time and the memory left. A memory guard in every game caps the frame rate at 30 under 600 MB left and flushes caches under 300 MB (`DM_MEM_GUARD=0` turns it off; the HUD shows `GUARD`). On 6 GB devices, Metal 4 pipelines and the pipeline prebuild are off by default, and the device's own pipeline list is not prewarmed before the first frame, so there is no long "Preparing" screen. |
 | **Launcher** | Upstream's single-screen launcher in UIKit, with memory-light defaults on 6 GB devices and Tile memory optimizations as an experiment. |
 | **Mods** | Emulator-layout mods (`exefs` IPS / pchtxt, `romfs`) from a `mods` folder, applied as rewriter cuts after a build-ID check. |
+| **TV output** | Every game fills an AirPlay or HDMI display at 16:9 through an iOS 27 scene accessory (`UISceneAccessory`, `dm/ios/Sources/front_ios.m`), on by default; the iPhone keeps the pad and the fps counter (`DM_TV_OUT=0` turns it off). Spanish guide: [docs/ca-ninapple/TV-AIRPLAY.md](docs/ca-ninapple/TV-AIRPLAY.md). |
 | **Window** | A builder window (black and pink) besides the command line. |
 
 The PC this was built and tested on:
