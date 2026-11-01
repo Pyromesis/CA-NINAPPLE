@@ -18,6 +18,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | Se oye la música pero la pantalla está negra | No hay shaders traducidos: el juego dibuja con programas que no están en el mapa | Mira `shader split: N shaders` en el log de build y `[RED] shader ... is not in the shader map` en `log.txt`. Ver [Pantalla negra](#pantalla-negra-con-música) |
 | Se cierra solo al arrancar | iOS lo mata por memoria | Firma con **Increased Memory Limit**; comprueba `boot: memory limit` en `log.txt` |
 | Se cierra al cargar una fase | Memoria o un recurso que el host aún no traga | Últimas líneas de `log.txt`; prueba `--split-data` y baja *Render scale* |
+| Se cierra al pulsar *Play* y `log.prev.txt` termina en `[RED] sf: the game connects to service bt itself` | El juego usa Bluetooth (`bt`), que el host no sirve | La API de Bluetooth queda inerte en el host. Ver [Se cierra al pulsar Play con Bluetooth](#se-cierra-al-pulsar-play-con-bluetooth) |
 | `[RED] this IPA uses vX (…), a version game profile … was not brought up on` | El perfil registrado es de otra versión | Es un aviso, no un error: el IPA usa un perfil derivado. La ruta soportada es poner la actualización que el perfil espera en la carpeta del juego |
 | `doctor.py` muestra `MISSING` | Falta una herramienta | Instala lo que dice su línea `get it:` o fija la ruta en `win\toolchain.json` |
 | La app se llama distinto o el bundle ID no es el del build | El firmador los sobreescribió | Mantén el nombre y el bundle ID del build en la herramienta de firma |
@@ -215,6 +216,32 @@ boot: memory limit 6000 MB
 
 Si el juego muere justo después de esa línea, o al entrar a una fase, es memoria. Prueba
 `--split-data` (los datos no van dentro de la app), *Render scale* más bajo y *Handheld*.
+
+## Se cierra al pulsar Play con Bluetooth
+
+Pokémon: Let's Go, Pikachu! se cerraba al pulsar *Play*, sin informe de fallo. `log.prev.txt`
+(la ejecución que se cerró) termina así:
+
+```
+[RED] sf: the game connects to service bt itself, which the host does not serve
+Break#1 reason=0 Result=0 svc at sdk+0xd989c
+bt: sdk+0x4c780 ...
+main+0x1139d4
+```
+
+No es memoria ni shaders. El juego llama a `nn::bluetooth::InitializeBle` al arrancar
+(`main+0x1139d4`) y después pide los eventos de escaneo, conexión, descubrimiento de servicios,
+MTU y operaciones GATT del Poké Ball Plus. `InitializeBle` arranca el cliente `btm` del SDK, que
+se conecta al servicio `bt` por sm y aborta dentro del cliente cuando la conexión se rechaza. El
+host no sirve `bt`, y la capa `sf` no podía entregar los handles de evento que llevan las
+respuestas del servicio.
+
+La solución es `dm/host/hle_bluetooth.c`: deja la API de Bluetooth inerte. `InitializeBle`
+devuelve éxito, cada `AcquireBle…Event` ata el `SystemEventType` del llamador a un evento del
+kernel que no se dispara nunca, las listas de escaneo y conexión están vacías (las llamadas que
+devuelven un contador devuelven 0) y toda operación GATT falla. El juego funciona como una
+consola sin mando Bluetooth emparejado; el multijugador con Poké Ball Plus queda abierto. En la
+referencia: [Bluetooth LE (`bt`) para el Poké Ball Plus](../reference/services.md#bluetooth-le-bt-for-the-poké-ball-plus).
 
 ## La televisión no muestra el juego
 

@@ -336,6 +336,13 @@ Most service calls can be found before they crash, before the first boot or the 
 - **Fix:** the Poké Ball Plus calls (`hid::*Palma*`, 26 functions) answer that none is connected: no npad has the Palma style, so the game never gets a connection handle, and every call on a handle fails (`hle_hid.c`).
 - **Found on:** [Pokémon Sword](../../dm/games/0100ABF008968000/README.md) (SDK 7).
 
+### Bluetooth LE (`bt`) for the Poké Ball Plus
+
+- **Symptom:** the app closes as soon as *Play* is pressed, with no crash report; `log.prev.txt` (the run that closed) ends with `[RED] sf: the game connects to service bt itself, which the host does not serve`, then `Break#1 reason=0 Result=0 svc at sdk+0xd989c` and a `bt:` backtrace that reaches `main+0x1139d4` from the boot thread.
+- **Cause:** the game's Bluetooth manager calls `nn::bluetooth::InitializeBle` at boot (`main+0x1139d4`) and then acquires the scan, connection, service-discovery, MTU and GATT-operation events. `InitializeBle` starts the SDK's `btm` client, which connects to the `bt` service through sm and aborts inside the client when the connect is refused; the host serves no `bt`, and the sf layer could not hand out the event handles that the service's replies carry.
+- **Fix:** `hle_bluetooth.c` makes the Bluetooth API inert: `InitializeBle` reports success, each `AcquireBle…Event` binds the caller's `SystemEventType` to a kernel event that never fires, the scan and connection lists are empty (the count-returning calls return 0) and every GATT operation fails. The game runs as a console with no Bluetooth controller paired.
+- **Found on:** [Pokémon: Let's Go, Pikachu!](../../dm/games/010003F003A34000/README.md) (1.0.2, v131072, SDK 5.4.151): boot, launcher and *Play* into the game.
+
 ### IR camera reported unconnected
 
 - **Symptom:** undefined `irsensor` imports found from the import list ([Listing a game's unhooked imports before they are met](#listing-a-games-unhooked-imports-before-they-are-met)).
