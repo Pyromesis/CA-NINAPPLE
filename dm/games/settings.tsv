@@ -7,28 +7,28 @@
 #             toggle: values - (on sets 1, off 0) or <on>/<off>, the two values the variable takes (on/off)
 #   default   a value (a toggle's: 1 on, 0 off); DM_GAME_<NAME>: the host's own default from the game profile (game_profile.h, game.py); build:<VAR>: the IPA build's setting (build_ipa.sh)
 #             <ios>|<mac> selects the platform's default before resolving a profile macro or build variable
-#   shown     always; DM_GAME_<NAME>!=<value> or ==<value>; fixups:<KEY>: main's rewriter table has that key (a stub in the game's build, patch_nso.py); languages>1; gfxapi:<API>: the packer's GFXAPI;
-#             platform:<ios | mac>: the app's platform (SETTINGS_PLATFORM, ios when unset), for a switch only that platform's front end reads
-#   section   Game, Controls or Performance: a heading on the single settings screen. Rows appear in table order within each section
+#   shown     always; DM_GAME_<NAME>!=<value> or ==<value>; fixups:<KEY>: main's rewriter table has that key (a stub in the game's build, patch_nso.py); languages>1; gfxapi:<API>: the packer's GFXAPI; platform:<ios | mac>: the app's platform (SETTINGS_PLATFORM, ios when unset), for a switch only that platform's front end reads
+#   section   Game, Graphics, Controls or Performance: a heading on the single settings screen. Rows appear in table order within each section
 #             Reset to tested defaults clears all launcher choices; values fixed by an env file stay
 #   label, note  the setting's name and the line under it (may be empty; only for a setting with a cost: latency, memory, heat)
 #   meta      optional, key=value pairs separated by ; (settings.py META lists the keys; docs/frontends.md, The settings list, describes them):
 #             level=basic  a setting a front end shows first;  needs=<VAR>=<value>  a sub-setting, drawn only while the row that sets <VAR> has that value
-DM_FPS_TARGET	choice	30=30 fps,60=60 fps	DM_GAME_FPS_TARGET	DM_GAME_FPS_TARGET!=0	Game	Frame rate		level=basic
-DM_DYNAMIC_RESOLUTION	toggle	-	0	fixups:DYNAMIC_RESOLUTION	Game	Dynamic resolution	Adjusts resolution between 70% and 100% under load. Turn off to keep full resolution for the selected console mode.
-DM_RENDER_SCALE	range	0.5:1.0:0.05	1.0	fixups:RENDER_SCALE	Game	Render scale		level=basic
-DM_OPMODE	choice	1=Docked,0=Handheld	DM_GAME_OPMODE	always	Game	Console mode		level=basic
-DM_PRESENT_UPSCALE	choice	off=Standard,metalfx=MetalFX	off	always	Game	Upscaling	Uses more GPU time and can increase heat.
-DM_LANG	choice	languages	build:DM_LANG	languages>1	Game	Game language		level=basic
-DM_FULLSCREEN	choice	0=Window,1=Fullscreen	0	platform:mac	Game	Display mode		level=basic
-DM_SHOW_FPS	toggle	-	build:DM_SHOW_FPS	platform:ios	Game	Frame-rate counter
-DM_TOUCH_HAPTICS	toggle	-	1	platform:ios	Controls	Touch feedback
-DM_RUMBLE	toggle	-	1	always	Controls	Game rumble		level=basic
-DM_RUMBLE_GAIN	range	0:3:0.1	1.0	always	Controls	Rumble strength		needs=DM_RUMBLE=1
-DM_RUMBLE_MIN	range	0:0.9:0.05	0	always	Controls	Rumble cutoff
-DM_PRESENT_SNAP	toggle	-	DM_GAME_PRESENT_SNAP	gfxapi:nvn	Performance	Frame buffering	Up to one frame more display latency.
-DM_PSO_MTL4	toggle	-	DM_GAME_PSO_MTL4|1	gfxapi:nvn	Performance	Metal 4 pipelines	Keeps a pipeline archive; uses more memory.
-DM_PSO_PREBUILD	toggle	-	1	gfxapi:nvn	Performance	Pipeline prebuild	The first start waits a few minutes for it, once.
-DM_NVN_ENC_THREAD	toggle	-	1|0	gfxapi:nvn	Performance	Encode thread
-DM_FPS_HOLD	toggle	on/off	DM_GAME_FPS_HOLD	DM_GAME_FPS_TARGET!=0	Performance	Hold frames when late
-DM_METAL_HUD	toggle	-	0	always	Performance	Performance HUD
+DM_LANG	choice	languages	build:DM_LANG	languages>1	Game	Game language	The game's own languages; the app starts in the one packed with the IPA.	level=basic
+DM_FULLSCREEN	choice	0=Window,1=Fullscreen	0	platform:mac	Game	Display mode	Window for the desktop; Fullscreen fills the display.	level=basic
+DM_SHOW_FPS	toggle	-	build:DM_SHOW_FPS	platform:ios	Game	Frame-rate counter	Shows the frames put on screen per second at the top left.
+DM_FPS_TARGET	choice	30=30 fps,60=60 fps	DM_GAME_FPS_TARGET	DM_GAME_FPS_TARGET!=0	Graphics	Frame rate	60 fps is smoother; 30 fps uses less power and keeps the phone cooler.	level=basic
+DM_RENDER_SCALE	range	0.5:1.0:0.05	1.0	fixups:RENDER_SCALE	Graphics	Render scale	Lower renders fewer pixels: lighter on the GPU but softer. Text and the interface stay sharp.	level=basic
+DM_OPMODE	choice	1=Docked,0=Handheld	DM_GAME_OPMODE	always	Graphics	Console mode	Docked uses the TV resolution (sharper); Handheld uses the handheld resolution (lighter).	level=basic
+DM_DYNAMIC_RESOLUTION	toggle	-	0	fixups:DYNAMIC_RESOLUTION	Graphics	Dynamic resolution	Lowers resolution between 70% and 100% under load instead of dropping frames.
+DM_PRESENT_UPSCALE	choice	off=Standard,metalfx=MetalFX	off	always	Graphics	Upscaling	MetalFX sharpens the scaled picture; it uses more GPU time and can add heat.
+DM_TOUCH_HAPTICS	toggle	-	1	platform:ios	Controls	Touch feedback	A light tap when you press an on-screen button.
+DM_RUMBLE	toggle	-	1	always	Controls	Game rumble	The game's vibration on the phone or on a connected controller.	level=basic
+DM_RUMBLE_GAIN	range	0:3:0.1	1.0	always	Controls	Rumble strength	How strong the game's vibration is, from 0 to 300%.	needs=DM_RUMBLE=1
+DM_RUMBLE_MIN	range	0:0.9:0.05	0	always	Controls	Rumble cutoff	Ignores weak controller rumble below this level; the phone's vibration is not affected.
+DM_PRESENT_SNAP	toggle	-	DM_GAME_PRESENT_SNAP	gfxapi:nvn	Performance	Frame buffering	Copies each frame so the GPU starts the next at once; up to one frame more display latency.
+DM_PRESENT_FIFO	choice	1=In order,0=Newest frame	1	gfxapi:nvn	Performance	Frame order	In order is smoother; Newest frame can reduce lag but may look uneven.
+DM_PSO_MTL4	toggle	-	DM_GAME_PSO_MTL4|1	gfxapi:nvn	Performance	Metal 4 pipelines	Keeps a pipeline archive and builds most pipelines from bases; uses more memory.
+DM_PSO_PREBUILD	toggle	-	1	gfxapi:nvn	Performance	Pipeline prebuild	Prepares pipelines before the first frame; the first start waits a few minutes, once.
+DM_NVN_ENC_THREAD	toggle	-	1|0	gfxapi:nvn	Performance	Encode thread	Translates graphics commands on their own thread, so the game's thread can go on sooner.
+DM_FPS_HOLD	toggle	on/off	DM_GAME_FPS_HOLD	DM_GAME_FPS_TARGET!=0	Performance	Hold frames when late	In heavy scenes, drops to half the frame rate instead of showing uneven late frames.
+DM_METAL_HUD	toggle	-	0	always	Performance	Performance HUD	Apple's overlay with fps, frame and GPU time and memory; leave it off to play.

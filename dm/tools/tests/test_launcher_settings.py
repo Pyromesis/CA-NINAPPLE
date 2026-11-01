@@ -15,7 +15,7 @@ settings = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(settings)
 
 BOTW, WONDER = '01007EF00011E000', '010015100B514000'
-PERFORMANCE_NVN = ['DM_PRESENT_SNAP', 'DM_PSO_MTL4', 'DM_PSO_PREBUILD', 'DM_NVN_ENC_THREAD', 'DM_FPS_HOLD', 'DM_METAL_HUD']
+PERFORMANCE_NVN = ['DM_PRESENT_SNAP', 'DM_PRESENT_FIFO', 'DM_PSO_MTL4', 'DM_PSO_PREBUILD', 'DM_NVN_ENC_THREAD', 'DM_FPS_HOLD', 'DM_METAL_HUD']
 
 
 def build(gid, api, platform=None):
@@ -30,7 +30,7 @@ class LauncherSettingsTests(unittest.TestCase):
         for api, gid in [('nvn', BOTW), ('vulkan', '0100535012974000'), ('gl', '010014E00DB56000')]:
             with self.subTest(api=api):
                 s = build(gid, api)['DM_PRESENT_UPSCALE']
-                self.assertEqual((s['kind'], s['section'], s['default']), ('choice', 'Game', 'off'))
+                self.assertEqual((s['kind'], s['section'], s['default']), ('choice', 'Graphics', 'off'))
                 self.assertEqual(s['options'], [['off', 'Standard'], ['metalfx', 'MetalFX']])
 
     def test_frame_buffering_by_graphics_api(self):
@@ -43,13 +43,28 @@ class LauncherSettingsTests(unittest.TestCase):
                     self.assertEqual((s['kind'], s['section'], s['default']), ('toggle', 'Performance', '1'))   # Breath of the Wild's profile: present_snap on
                     self.assertIn('latency', s['note'])
 
+    def test_graphics_section_holds_the_picture_settings(self):
+        """Quality settings live under Graphics, apart from the game's own options and the performance switches"""
+        with tempfile.TemporaryDirectory() as tmp, patch.object(settings.nacp, 'languages', return_value=['en-US']), patch.dict(os.environ, {'GFXAPI': 'nvn'}):
+            (Path(tmp) / 'main.fixups.tsv').write_text('# RENDER_SCALE\t1\n# DYNAMIC_RESOLUTION\t1\n')
+            listed = settings.build(BOTW, tmp, Path(tmp) / 'control.nacp')
+        rows = {s['env']: s for s in listed['settings']}
+        self.assertEqual([e for e, s in rows.items() if s['section'] == 'Graphics'],
+                         ['DM_FPS_TARGET', 'DM_RENDER_SCALE', 'DM_OPMODE', 'DM_DYNAMIC_RESOLUTION', 'DM_PRESENT_UPSCALE'])
+        fifo = rows['DM_PRESENT_FIFO']
+        self.assertEqual((fifo['kind'], fifo['section'], fifo['default']), ('choice', 'Performance', '1'))
+        self.assertEqual(fifo['options'], [['1', 'In order'], ['0', 'Newest frame']])
+        for api, gid in [('vulkan', '0100535012974000'), ('gl', '010014E00DB56000'), ('', BOTW)]:   # nvn_mtl.m reads it
+            with self.subTest(api=api):
+                self.assertNotIn('DM_PRESENT_FIFO', build(gid, api))
+
     def test_sections_keep_the_profile_defaults(self):
         botw, wonder = build(BOTW, 'nvn'), build(WONDER, 'nvn')
         self.assertEqual([e for e, s in botw.items() if s['section'] == 'Performance'], PERFORMANCE_NVN)
         self.assertEqual(botw['DM_PSO_MTL4']['default'], '1')   # pso_mtl4 on
         self.assertEqual((wonder['DM_PRESENT_SNAP']['default'], wonder['DM_PSO_MTL4']['default']), ('0', '0'))
         self.assertEqual((botw['DM_PSO_PREBUILD']['default'], botw['DM_NVN_ENC_THREAD']['default'], botw['DM_METAL_HUD']['default']), ('1', '1', '0'))   # the host's iOS defaults
-        self.assertEqual(list(dict.fromkeys(s['section'] for s in botw.values())), ['Game', 'Controls', 'Performance'])
+        self.assertEqual(list(dict.fromkeys(s['section'] for s in botw.values())), ['Game', 'Graphics', 'Controls', 'Performance'])
         self.assertNotIn('DM_FPS_HOLD', wonder)   # no frame step, as the Frame rate row
         self.assertIn('first start', botw['DM_PSO_PREBUILD']['note'])   # it runs once in the prepare step, before the first frame
 
@@ -95,7 +110,7 @@ class LauncherSettingsTests(unittest.TestCase):
             listed = settings.build(BOTW, tmp, Path(tmp) / 'control.nacp')
         rows = {s['env']: s for s in listed['settings']}
         self.assertEqual(listed['schema'], 1)
-        self.assertEqual([e for e, s in rows.items() if s.get('level') == 'basic'], ['DM_FPS_TARGET', 'DM_RENDER_SCALE', 'DM_OPMODE', 'DM_LANG', 'DM_RUMBLE'])
+        self.assertEqual([e for e, s in rows.items() if s.get('level') == 'basic'], ['DM_LANG', 'DM_FPS_TARGET', 'DM_RENDER_SCALE', 'DM_OPMODE', 'DM_RUMBLE'])
         self.assertEqual(rows['DM_RUMBLE_GAIN']['needs'], 'DM_RUMBLE=1')
         self.assertFalse({'level', 'needs'} & set(rows['DM_METAL_HUD']), 'a row without meta has no optional fields')
 

@@ -22,7 +22,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | `doctor.py` muestra `MISSING` | Falta una herramienta | Instala lo que dice su línea `get it:` o fija la ruta en `win\toolchain.json` |
 | La app se llama distinto o el bundle ID no es el del build | El firmador los sobreescribió | Mantén el nombre y el bundle ID del build en la herramienta de firma |
 | Va lento, se calienta y baja de FPS | GPU al límite | *Render scale* al 75 %, *Console mode: Handheld*, *Upscaling: Standard* |
-| El build muere con `a split build copies the RomFS as a folder…` | El XCI se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con un XCI grande](#el-build-partido-falla-con-un-xci-grande) |
+| El build muere con `a split build copies the RomFS as a folder…` | El XCI o el NSP se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con una imagen RomFS](#el-build-partido-falla-con-una-imagen-romfs) |
 | `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
 | `ios install` termina con `ExtractionFailed` | El firmador dejó el ejecutable en `0644` | `python win\fix_ipa_mode.py <IPA firmado>` y reinstala. Ver [La instalación falla con ExtractionFailed](#la-instalación-falla-con-extractionfailed) |
 | `plumesign … --udid <UDID>` dice `Device ID … not found` | Su `--udid` espera el id numérico de usbmuxd, no el UDID | `python win\usbmuxd_id.py` y pasa ese número. Ver [Instalar en un segundo iPhone](INSTALAR-DESDE-PC.md#a2b-instalar-en-un-segundo-iphone) |
@@ -87,7 +87,7 @@ Qué implica:
 
 Si tienes la versión registrada, úsala: es la ruta con la que el juego se probó.
 
-## El build partido falla con un XCI grande
+## El build partido falla con una imagen RomFS
 
 Síntoma, al final de una compilación larga (extracción y shaders ya hechos):
 
@@ -95,9 +95,10 @@ Síntoma, al final de una compilación larga (extracción y shaders ya hechos):
 FAIL: a split build copies the RomFS as a folder, and this extraction is one RomFS image (RomFS.img): build without --split-data
 ```
 
-Causa: al extraer un **XCI**, el RomFS queda como **una sola imagen**
-(`<title ID>_build\extract\vX\RomFS.img`), que es lo que lee el host. `--split-data` construye
-la carpeta de datos copiando el RomFS archivo por archivo, así que el empaquetador de Windows
+Causa: al extraer un **XCI o un NSP**, el RomFS queda como **una sola imagen**
+(`<title ID>_build\extract\vX\RomFS.img`), que es lo que lee el host; pasa también con
+Pokémon: Let's Go, Pikachu!, cuya imagen ocupa 4,4 GB. `--split-data` construye la carpeta de
+datos copiando el RomFS archivo por archivo, así que el empaquetador de Windows
 (`win/build_app.py`) rechazaba esa combinación en vez de partir la imagen.
 
 Solución: usa **`--romfs separate`**, no `--split-data`. El IPA se queda pequeño (app y

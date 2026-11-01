@@ -363,7 +363,7 @@ With a free Apple ID the app must be signed again every 7 days.
 
 ## The launcher on the device
 
-The settings screen before the game starts follows upstream's single-screen SwiftUI launcher: the game card (icon, name, version, **Play**) on the left third, and on the right every setting under *Game*, *Controls* and *Performance*, each with its note, then *Reset to tested defaults* and the memory available. On Windows it is drawn by [`win/ios/Launcher.m`](win/ios/Launcher.m), a UIKit port, so no Swift toolchain is needed. Only choices that differ from the game's tested defaults are kept.
+The settings screen before the game starts follows upstream's single-screen SwiftUI launcher: the game card (icon, name, version, **Play**) on the left third, and on the right every setting under *Game*, *Graphics*, *Controls* and *Performance*, each with its note, then *Reset to tested defaults* and the memory available. On Windows it is drawn by [`win/ios/Launcher.m`](win/ios/Launcher.m), a UIKit port, so no Swift toolchain is needed. Only choices that differ from the game's tested defaults are kept.
 
 | Setting | What it does |
 |---|---|

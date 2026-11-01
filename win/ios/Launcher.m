@@ -1,6 +1,6 @@
 // Launcher for the Windows build: a UIKit port of dm/ios/Sources/Launcher.swift and LauncherSettings.swift (SwiftUI), so the app builds with clang alone (no Swift toolchain).
 // Its look follows the SwiftUI launcher (upstream c13ddcf, the single settings screen): the game card on the left third (icon, name, version, Play); on the right two thirds an
-// inset-grouped list with one section per settings section (Game, Controls, Performance) in table order, each row with its note under its label, choices as a menu button,
+// inset-grouped list with one section per settings section (Game, Graphics, Controls, Performance) in table order, each row with its note under its label, choices as a menu button,
 // ranges as a slider with a percentage, toggles as switches; then "Reset to tested defaults" and the memory available. Same contract: dm_show_launcher(view controller, done)
 // shows the screen over the root view controller, puts every setting into the environment when Play is pressed and then calls done; it returns false (done is not called)
 // when there is no launcher (no dm/launcher.json, DM_LAUNCHER=0, or a file it cannot read). Settings come from the app's dm/launcher.json (dm/games/settings.py): kind "choice"
