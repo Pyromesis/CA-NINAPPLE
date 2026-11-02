@@ -30,7 +30,7 @@ A built app carries the settings its game supports, as the iPhone app's settings
 ```json
 {"schema": 1, "game": "01007EF00011E000", "settings": [
  {"env": "DM_FPS_TARGET", "kind": "choice", "section": "Graphics", "label": "Frame rate", "note": "…", "default": "60",
-  "options": [["30", "30 fps"], ["60", "60 fps"]], "level": "basic"},
+  "options": [["0", "Game's own"], ["30", "30 fps"], ["60", "60 fps"]], "level": "basic"},
  {"env": "DM_RENDER_SCALE", "kind": "range", "section": "Graphics", "label": "Render scale", "note": "…", "default": "1.0", "min": 0.5, "max": 1.0, "step": 0.05},
  {"env": "DM_FPS_HOLD", "kind": "toggle", "section": "Performance", "label": "Hold frames when late", "note": "…", "default": "on", "on": "on", "off": "off"}
 ]}

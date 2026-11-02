@@ -123,6 +123,17 @@ static void dynamic_resolution_tick(void) {
     }
 }
 
+// Whether this main build has an engine frame limiter the host raises (k_locks or the NieR rows). With none, hle_nvn.c must not turn
+// fps_target into a fixed present interval: a game that steps its own time by the interval it picks would run at the wrong speed.
+int dm_fpslock_build(void) {
+    for (int i = 0; i < g_nmod; i++) if (!strcmp(g_mod[i].name, "main")) {
+        if (!strcmp(g_mod[i].build_id, "992787e2b54259948b844059a8ab21ad")) return 1;
+        for (int k = 0; k < NLOCKS; k++) if (!strcmp(g_mod[i].build_id, k_locks[k].build)) return 1;
+        for (int k = 0; k < (int)(sizeof k_nier_dr / sizeof *k_nier_dr); k++) if (!strcmp(g_mod[i].build_id, k_nier_dr[k].build)) return 1;
+    }
+    return 0;
+}
+
 void dm_fps_lock_tick(void) {
     dynamic_resolution_tick();   // separate from the FPS cap
     static int state = -2, rows[NLOCKS], nrow, nlog[NLOCKS], target, nier; static uint8_t *base; static const char *src; static uint32_t display;

@@ -23,7 +23,8 @@ static void check(int which) {
     *unity = which == 1 ? 60 : which == 4 ? -1 : which == 5 ? 0 : 30;
     uint8_t object[0x500] = {0};
     float *f = NULL; int32_t *sync = NULL;
-    if (which == 3) g_mod[0].build_id[0] = '0';
+    assert(dm_fpslock_build() == 1);   // hle_nvn.c: only a build with a row may keep a presentation cap
+    if (which == 3) { g_mod[0].build_id[0] = '0'; assert(dm_fpslock_build() == 0); }
     if (which == 6) {
         strcpy(g_mod[0].build_id, "c9a3dd7702075ecd90101f4555389582");
         *(uintptr_t *)(base + 0x1295b3f0) = (uintptr_t)object;
@@ -39,7 +40,7 @@ static void check(int which) {
         sync = (int32_t *)(object + 16); sync[0] = sync[1] = 2;
     } else if (which >= 9) {
         strcpy(g_mod[0].build_id, "b7f965b9d7227db8e29f04e84ea7331b");
-        if (which == 12) g_mod[0].build_id[31] = '0';
+        if (which == 12) { g_mod[0].build_id[31] = '0'; assert(dm_fpslock_build() == 0); }
         *(uintptr_t *)(base + 0x8adca10 + 0x10) = which == 13 ? 0 : (uintptr_t)object;
         sync = (int32_t *)object; sync[0] = sync[1] = which == 10 ? 1 : 2;
     }

@@ -53,5 +53,5 @@ if __name__ == '__main__':
         if OUT.read_text() != text: sys.exit(f'{OUT.relative_to(REPO)} is out of date: run dm/tools/docs_symptoms.py')
         print(f'{OUT.relative_to(REPO)} is current')
     else:
-        OUT.write_text(text)
+        OUT.write_text(text, encoding='utf-8', newline='\n')   # LF on every host: .gitattributes keeps files byte-identical
         print(f'{OUT.relative_to(REPO)}: {text.count(" → [")} symptoms')

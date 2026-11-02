@@ -1580,6 +1580,7 @@ static _Atomic uint64_t g_itv2_since;   // start of the game's current run of in
 // (fstep_tick, nvn_fstep.h) and presents follow the hold k it decides with it
 __attribute__((weak)) uint8_t *dm_fps_state;   // loader.c; graphics unit tests have no loader
 __attribute__((weak)) void dm_fps_lock_tick(void) {}   // hle_fpslock.c: engine frame limits in game memory (Monster Hunter Rise); graphics unit tests have no host
+__attribute__((weak)) int dm_fpslock_build(void) { return 1; }   // hle_fpslock.c: whether an engine limiter row matches this main; tests keep the cap
 // Thermal cap (iOS): while the device is thermally serious or worse (NSProcessInfo thermalState >= 2) the frame step holds 30 fps, and it goes back to the cap after the device
 // has been fair or better for THERMAL_CALM_NS, so it does not flap. At "serious" iOS caps the GPU clock to about a third: Breath of the Wild's vistas (about 3,000 G-buffer draws)
 // then took 17-26 ms a frame and dropped a frame in most windows; a steady 30 instead also lets the device cool. DM_THERMAL_CAP=0 turns it off; the Mac reports no thermal state
@@ -1617,12 +1618,21 @@ static int fps_step_cap(void) {
 static int fstep_on(void) { return fps_step_cap() != 0; }   // the host decides the steps in whole vsyncs
 // Engine-native frame limiters have no frame-step state page. Their requested
 // cap still governs presentation, even when the profile uses display pacing.
+// A game that steps its own time by the present interval it picks (2 or 3
+// vsyncs) has no limiter to raise: a fixed interval of 1 or 2 would run it 2x
+// or 1.5x fast at 20 fps moments, so there the game's own interval governs.
 static int g_present_cap = -1;
 static int fps_present_cap(void) {
     if (dm_fps_state) return fps_step_cap();
     if (g_present_cap < 0) {
         const char *e=getenv("DM_FPS_TARGET");int t=e?atoi(e):DM_GAME_FPS_TARGET;
-        g_present_cap=t==30||t==60?t:0;
+        int cap=t==30||t==60?t:0;
+        if (cap && !dm_fpslock_build() && !DM_GAME_PRESENT_DISPLAY) {
+            LOG("[nvn] frame rate: this build has no frame-step stubs and no engine limiter to raise; following the game's own interval (%s %d ignored)",
+                e ? "DM_FPS_TARGET" : "fps_target", t);
+            cap=0;
+        }
+        g_present_cap=cap;
     }
     return g_present_cap;
 }

@@ -6,7 +6,7 @@ The screen before the game starts shows the settings the game supports. A settin
 - [Game](#game): [Game language](#game-language), [Frame-rate counter](#frame-rate-counter)
 - [Graphics](#graphics): [Frame rate](#frame-rate), [Render scale](#render-scale), [Console mode](#console-mode), [Dynamic resolution](#dynamic-resolution), [Upscaling](#upscaling)
 - [Controls](#controls): [Touch feedback](#touch-feedback), [Game rumble](#game-rumble), [Rumble strength](#rumble-strength), [Rumble cutoff](#rumble-cutoff)
-- [Performance](#performance): [Frame buffering](#frame-buffering), [Frame order](#frame-order), [Metal 4 pipelines](#metal-4-pipelines), [Pipeline prebuild](#pipeline-prebuild), [Encode thread](#encode-thread), [Hold frames when late](#hold-frames-when-late), [Performance HUD](#performance-hud), [Reset to tested defaults](#reset-to-tested-defaults)
+- [Performance](#performance): [Frame buffering](#frame-buffering), [Frame order](#frame-order), [Metal 4 pipelines](#metal-4-pipelines), [Pipeline prebuild](#pipeline-prebuild), [Encode thread](#encode-thread), [Hold frames when late](#hold-frames-when-late), [Thermal 30 fps cap](#thermal-30-fps-cap), [Performance HUD](#performance-hud), [Reset to tested defaults](#reset-to-tested-defaults)
 - [The Mac settings window](#the-mac-settings-window): [Display mode](#display-mode)
 - [Settings in a file](#settings-in-a-file)
 
@@ -32,7 +32,7 @@ Shows the frames per second at the top left.
 
 ### Frame rate
 
-Games whose speed the app controls (Breath of the Wild, Tears of the Kingdom and a few others) offer **30 fps** or **60 fps**. 60 is smoother; 30 is what the Switch ran and uses less power, so the phone stays cooler and the battery lasts longer. The game runs at real speed either way.
+Games whose speed the app controls (Breath of the Wild, Tears of the Kingdom and a few others) offer **60 fps**, **30 fps** and **Game's own**. 60 is smoother; 30 is what the Switch ran and uses less power, so the phone stays cooler and the battery lasts longer. **Game's own** leaves the game's own frame rate (30 fps in these two, 20 in heavy scenes) and its own time step. The game runs at real speed with all three when the app knows the build. A build whose frame-step patches did not apply (an unregistered game version) is paced by its own interval instead of 30 or 60, so it cannot run fast; the log says `following the game's own interval`. **Game's own** is the choice that matches what the Switch did.
 
 ### Render scale
 
@@ -183,6 +183,13 @@ flowchart LR
 - **Off:** the game keeps aiming at 60; a late frame is shown one refresh later and the next one goes on as usual, so heavy scenes look less even but stay closer to 60 on average.
 - **When to change it:** turn it off if the game often falls to 30 fps although it is only slightly late.
 
+### Thermal 30 fps cap
+
+While the iPhone reports a serious or worse thermal state, the app holds 30 fps and waits 30 seconds of fair or better state before returning to the chosen rate, so it does not flap. iOS cuts the GPU clock to about a third at that point; a steady 30 instead also lets the phone cool. It appears for games whose build carries the frame step, where the app can hold 30 at real speed ([Frame rate](#frame-rate)); on a build without it the game already follows its own rate and there is nothing to hold.
+
+- **When to change it:** turn it off to keep the chosen frame rate while the phone is hot. The picture stays smoother for a while, but the phone gets hotter and iOS may throttle the GPU anyway.
+- **Cost:** more heat and battery use in long sessions. The default is on.
+
 ### Performance HUD
 
 Apple's performance overlay over the game: frame rate, frame and GPU times, memory. Useful to see what a setting changes; leave it off for play.
@@ -209,7 +216,7 @@ A line like `DM_PRESENT_SNAP=0` in `Documents/env.txt` (in the Files app, under 
 
 | Setting | Variable | Values |
 |---|---|---|
-| Frame rate | `DM_FPS_TARGET` | `30`, `60` |
+| Frame rate | `DM_FPS_TARGET` | `0` (the game's own), `30`, `60` |
 | Render scale | `DM_RENDER_SCALE` | `0.5` to `1.0` |
 | Console mode | `DM_OPMODE` | `1` docked, `0` handheld |
 | Game language | `DM_LANG` | a language code, such as `ja` |
@@ -227,6 +234,7 @@ A line like `DM_PRESENT_SNAP=0` in `Documents/env.txt` (in the Files app, under 
 | Pipeline prebuild | `DM_PSO_PREBUILD` | `1`, `0` |
 | Encode thread | `DM_NVN_ENC_THREAD` | `1`, `0` |
 | Hold frames when late | `DM_FPS_HOLD` | `on`, `off` |
+| Thermal 30 fps cap | `DM_THERMAL_CAP` | `1`, `0` |
 | Performance HUD | `DM_METAL_HUD` | `1`, `0` |
 
 `DM_LAUNCHER=0` skips the settings screen; the choices you saved there still apply. `DM_SAVED_CHOICES=0` starts with the tested defaults and keeps your saved choices for later. How the settings are listed for each game: [dm/games/settings.tsv](../dm/games/settings.tsv).

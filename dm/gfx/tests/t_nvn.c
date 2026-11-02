@@ -60,6 +60,7 @@ int main(void) {
     // Engine-native limiters have no FPS state page. Their launcher cap must
     // still pace presents and select the display-link rate in display mode.
     { win_t w={.interval=1};nvn_present_config(60,1);dm_fps_state=NULL;
+      EXPECT("graphics tests have no host build rows",1,dm_fpslock_build());   // the weak stub keeps the cap cases below
       setenv("DM_FPS_TARGET","30",1);g_present_cap=-1;
       EXPECT("native 30 cap: display interval",2,present_itv(&w));
       EXPECT("native 30 cap: period ns",33333333,present_period(&w));

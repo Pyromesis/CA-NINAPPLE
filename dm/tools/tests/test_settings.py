@@ -18,6 +18,6 @@ class ResolutionSetting(unittest.TestCase):
                 if dr:self.assertEqual((dr[0]['kind'],dr[0]['default']),('toggle','0'))
                 fps=next(s for s in rows if s['env']=='DM_FPS_TARGET')
                 self.assertEqual(fps['default'],'60')
-                self.assertEqual(fps['options'],[['30','30 fps'],['60','60 fps']])
+                self.assertEqual(fps['options'],[['0',"Game's own"],['30','30 fps'],['60','60 fps']])
 
 if __name__=='__main__':unittest.main()

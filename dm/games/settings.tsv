@@ -16,7 +16,7 @@
 DM_LANG	choice	languages	build:DM_LANG	languages>1	Game	Game language	The game's own languages; the app starts in the one packed with the IPA.	level=basic
 DM_FULLSCREEN	choice	0=Window,1=Fullscreen	0	platform:mac	Game	Display mode	Window for the desktop; Fullscreen fills the display.	level=basic
 DM_SHOW_FPS	toggle	-	build:DM_SHOW_FPS	platform:ios	Game	Frame-rate counter	Shows the frames put on screen per second at the top left.
-DM_FPS_TARGET	choice	30=30 fps,60=60 fps	DM_GAME_FPS_TARGET	DM_GAME_FPS_TARGET!=0	Graphics	Frame rate	60 fps is smoother; 30 fps uses less power and keeps the phone cooler.	level=basic
+DM_FPS_TARGET	choice	0=Game's own,30=30 fps,60=60 fps	DM_GAME_FPS_TARGET	DM_GAME_FPS_TARGET!=0	Graphics	Frame rate	60 fps is smoother; 30 fps uses less power and keeps the phone cooler; Game's own keeps the game's own rate and speed.	level=basic
 DM_RENDER_SCALE	range	0.5:1.0:0.05	1.0	fixups:RENDER_SCALE	Graphics	Render scale	Lower renders fewer pixels: lighter on the GPU but softer. Text and the interface stay sharp.	level=basic
 DM_OPMODE	choice	1=Docked,0=Handheld	DM_GAME_OPMODE	always	Graphics	Console mode	Docked uses the TV resolution (sharper); Handheld uses the handheld resolution (lighter).	level=basic
 DM_DYNAMIC_RESOLUTION	toggle	-	0	fixups:DYNAMIC_RESOLUTION	Graphics	Dynamic resolution	Lowers resolution between 70% and 100% under load instead of dropping frames.
@@ -31,4 +31,5 @@ DM_PSO_MTL4	toggle	-	DM_GAME_PSO_MTL4|1	gfxapi:nvn	Performance	Metal 4 pipelines
 DM_PSO_PREBUILD	toggle	-	1	gfxapi:nvn	Performance	Pipeline prebuild	Prepares pipelines before the first frame; the first start waits a few minutes, once.
 DM_NVN_ENC_THREAD	toggle	-	1|0	gfxapi:nvn	Performance	Encode thread	Translates graphics commands on their own thread, so the game's thread can go on sooner.
 DM_FPS_HOLD	toggle	on/off	DM_GAME_FPS_HOLD	DM_GAME_FPS_TARGET!=0	Performance	Hold frames when late	In heavy scenes, drops to half the frame rate instead of showing uneven late frames.
+DM_THERMAL_CAP	toggle	-	1	fixups:FPS_STATE_OFF	Performance	Thermal 30 fps cap	While the phone is hot, holds 30 fps until it cools; off keeps the chosen frame rate and uses more power.
 DM_METAL_HUD	toggle	-	0	always	Performance	Performance HUD	Apple's overlay with fps, frame and GPU time and memory; leave it off to play.

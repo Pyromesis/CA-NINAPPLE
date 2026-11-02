@@ -23,6 +23,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | `doctor.py` muestra `MISSING` | Falta una herramienta | Instala lo que dice su línea `get it:` o fija la ruta en `win\toolchain.json` |
 | La app se llama distinto o el bundle ID no es el del build | El firmador los sobreescribió | Mantén el nombre y el bundle ID del build en la herramienta de firma |
 | Va lento, se calienta y baja de FPS | GPU al límite | *Render scale* al 75 %, *Console mode: Handheld*, *Upscaling: Standard* |
+| El personaje va más rápido de lo normal (Zelda) | El IPA es de una versión del juego sin los parches del frame step, y el host fija los presentes a 30 o 60 | Pon `DM_FPS_TARGET=0` en `Documents/env.txt` o elige *Game's own* en *Frame rate*. Ver [Va más rápido de lo normal](#va-más-rápido-de-lo-normal) |
 | El build muere con `a split build copies the RomFS as a folder…` | El XCI o el NSP se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con una imagen RomFS](#el-build-partido-falla-con-una-imagen-romfs) |
 | `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
 | `ios install` termina con `ExtractionFailed` | El firmador dejó el ejecutable en `0644` | `python win\fix_ipa_mode.py <IPA firmado>` y reinstala. Ver [La instalación falla con ExtractionFailed](#la-instalación-falla-con-extractionfailed) |
@@ -242,6 +243,28 @@ kernel que no se dispara nunca, las listas de escaneo y conexión están vacías
 devuelven un contador devuelven 0) y toda operación GATT falla. El juego funciona como una
 consola sin mando Bluetooth emparejado; el multijugador con Poké Ball Plus queda abierto. En la
 referencia: [Bluetooth LE (`bt`) para el Poké Ball Plus](../reference/services.md#bluetooth-le-bt-for-the-poké-ball-plus).
+
+## Va más rápido de lo normal
+
+En Zelda: Tears of the Kingdom en el iPhone, con *Frame rate* en 30 o 60, el personaje a veces
+corre más de la cuenta aunque el juego siga a 30 fps. No es memoria ni GPU: el IPA se compiló con
+una versión del juego (1.4.2) distinta de la que el perfil del repositorio tiene probada (1.4.3).
+Los parches del *frame step* están atados a los build IDs de 1.4.3, así que en 1.4.2 el host no
+los aplica y fija la pantalla a un intervalo constante (1 vsync a 60, 2 a 30), mientras el juego
+elige el suyo (2 = 30 fps, 3 = 20 fps con carga) y avanza el tiempo por ese intervalo. Un momento
+de 20 fps mostrado a 30 corre un 50 % más rápido; a 60, todo corre al doble.
+
+Solución inmediata, sin recompilar, en `Documents/env.txt`:
+
+```
+DM_FPS_TARGET=0
+```
+
+Cierra la app del todo y ábrela: el juego lleva su propio ritmo (30 fps, 20 en escenas cargadas) y
+la velocidad vuelve a ser la normal. En un IPA con este cambio, elige *Game's own* en
+**Frame rate**. Si consigues la actualización 1.4.3 (v720896), el perfil registrado ya trae los
+parches y 30/60 funcionan a velocidad correcta. En la referencia:
+[A frame-rate cap on a build without the frame-step stubs](../reference/frame-rate.md#a-frame-rate-cap-on-a-build-without-the-frame-step-stubs).
 
 ## La televisión no muestra el juego
 

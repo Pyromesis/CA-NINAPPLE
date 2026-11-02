@@ -655,7 +655,8 @@ Applied to the `sdk` of any build without CUTS whose profile was not brought up 
 
 Dead code unless such a build is run; a candidate for removal, or for a build row in its profile.
 
-- `992787e2…`: [hle_fpslock.c:133](../../dm/host/hle_fpslock.c#L133): build check (a build no profile registers)
+- `992787e2…`: [hle_fpslock.c:130](../../dm/host/hle_fpslock.c#L130): build check (a build no profile registers)
+- `992787e2…`: [hle_fpslock.c:144](../../dm/host/hle_fpslock.c#L144): build check (a build no profile registers)
 
 ## Translator rules keyed by a shader's code
 
