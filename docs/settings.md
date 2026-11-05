@@ -1,10 +1,10 @@
 # Settings
 
-The screen before the game starts shows the settings the game supports. A setting that only matters while another is on appears under it and disappears when that one is turned off. Tap **Play** to start; the app remembers your choices for the next start. All settings are on one scrollable screen, under **Game**, **Graphics**, **Controls** and **Performance**. Tap a menu or move a slider there; no settings page needs opening. **Frame rate**, **Render scale**, **Console mode**, **Dynamic resolution** and **Upscaling** are in **Graphics**: the picture's quality. A Mac app shows the same settings in a [window of its own](#the-mac-settings-window).
+The screen before the game starts shows the settings the game supports. A setting that only matters while another is on appears under it and disappears when that one is turned off. Tap **Play** to start; the app remembers your choices for the next start. All settings are on one scrollable screen, under **Game**, **Graphics**, **Controls** and **Performance**. Tap a menu or move a slider there; no settings page needs opening. **Frame rate**, **Render scale**, **Console mode**, **Dynamic resolution**, **Upscaling** and **Screen fit** are in **Graphics**: the picture's quality and shape. A Mac app shows the same settings in a [window of its own](#the-mac-settings-window).
 
 - [Tested defaults](#tested-defaults)
 - [Game](#game): [Game language](#game-language), [Frame-rate counter](#frame-rate-counter)
-- [Graphics](#graphics): [Frame rate](#frame-rate), [Render scale](#render-scale), [Console mode](#console-mode), [Dynamic resolution](#dynamic-resolution), [Upscaling](#upscaling)
+- [Graphics](#graphics): [Frame rate](#frame-rate), [Render scale](#render-scale), [Console mode](#console-mode), [Dynamic resolution](#dynamic-resolution), [Upscaling](#upscaling), [Screen fit](#screen-fit)
 - [Controls](#controls): [Touch feedback](#touch-feedback), [Game rumble](#game-rumble), [Rumble strength](#rumble-strength), [Rumble cutoff](#rumble-cutoff)
 - [Performance](#performance): [Frame buffering](#frame-buffering), [Frame order](#frame-order), [Metal 4 pipelines](#metal-4-pipelines), [Pipeline prebuild](#pipeline-prebuild), [Encode thread](#encode-thread), [Hold frames when late](#hold-frames-when-late), [Thermal 30 fps cap](#thermal-30-fps-cap), [Performance HUD](#performance-hud), [Reset to tested defaults](#reset-to-tested-defaults)
 - [The Mac settings window](#the-mac-settings-window): [Display mode](#display-mode)
@@ -64,6 +64,10 @@ Breath of the Wild renders 1280x720 in handheld mode. Docked it renders its worl
 - **When to change it:** turn it on if the picture looks soft and the device has GPU time to spare: on a Mac, or on an iPhone in handheld mode at 30 fps. For long sessions at 60 fps on an iPhone leave it at Standard.
 - **Cost:** more GPU time each frame, which can increase heat on an iPhone. [Breath of the Wild's measurements](../dm/games/01007EF00011E000/README.md#upscaling-current) cover Mac and iPhone; the matching iPhone Standard run and MetalFX's share of the thermal cost remain unmeasured. Nothing changes while the game's picture is as large as the screen. Unsupported devices and sizes use Standard scaling.
 - **On the Mac:** choose **MetalFX** under **Upscaling** in the [settings window](#the-mac-settings-window)'s Advanced settings, or set `DM_PRESENT_UPSCALE=metalfx` in its `env.txt` (off by default). It helps in a large window or on a 4K screen.
+
+### Screen fit
+
+The game's picture keeps its own shape (16:9 for most Switch games) and the iPhone's screen is wider (about 19.5:9), so by default the picture is centred with black bars at the left and right. **Fit**, the default, keeps that shape and the bars; **Stretch** widens the picture until it fills the screen, so nothing is cut but circles become ovals; **Fill** zooms the picture evenly until the bars are gone, which keeps shapes but cuts a strip from the top and bottom. The game's HUD can sit in that strip (Cuphead's health and super cards are at the top and bottom of the left edge), so try **Stretch** first if you want the whole picture. Only games whose picture is a different shape than the screen show any difference.
 
 ## Controls
 

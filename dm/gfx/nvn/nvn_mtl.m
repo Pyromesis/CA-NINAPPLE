@@ -10578,10 +10578,28 @@ static id<MTLTexture> present_raw_src(id<MTLTexture> src) {
     if (!v) { RED_ONCE(69, "present: cannot create a non-sRGB view of the sRGB swapchain texture (format %lu); presenting the decoded values", (unsigned long)src.pixelFormat); return src; }
     return v;
 }
+// The screen fit choice (DM_PRESENT_FIT): fit (the default) keeps the picture's aspect ratio with black bars; stretch fills the canvas and widens the picture;
+// fill scales uniformly until the bars are gone, cropping the top and bottom. Read once: the launcher sets it before the host starts, env.txt before that.
+static int present_fit(void) {
+    static int v = -1;
+    if (v >= 0) return v;
+    const char *e = getenv("DM_PRESENT_FIT");
+    if (e && !strcmp(e, "stretch")) v = 1;
+    else if (e && !strcmp(e, "fill")) v = 2;
+    else { v = 0; if (e && *e && strcmp(e, "fit")) MLOG("[RED] DM_PRESENT_FIT=%s: fit, stretch or fill; keeping fit", e); }
+    MLOG("screen fit (DM_PRESENT_FIT): %s", v == 1 ? "stretch, the picture fills the screen and is widened" : v == 2 ? "fill, zoomed until the black bars are gone (the top and bottom are cropped)" : "fit, the picture's aspect ratio kept with black bars");
+    return v;
+}
 // The rectangle of the canvas (dw x dh) the picture (cw x ch) is drawn into: the picture's aspect ratio kept and centred, black bars in the rest (no stretching when the screen's ratio
 // differs from the game's, e.g. iPhone about 19.5:9 against the game's 16:9); when the ratios differ by under 1 % (the remainder from a game width that is a multiple of 8 in the
 // full-screen setup, e.g. 1952x900 against 2868x1320 differs by 0.17 %) the whole canvas, leaving no border of a few pixels
 static MTLViewport present_viewport(double cw, double ch, double dw, double dh) {
+    int fit = present_fit();
+    if (fit == 1) return (MTLViewport){0, 0, dw, dh, 0, 1};   // stretch
+    if (fit == 2) {   // fill: the taller of the two scales wins, the rest is cropped by the render target's bounds
+        double s = fmax(dw / cw, dh / ch);
+        return (MTLViewport){floor((dw - cw * s) / 2), floor((dh - ch * s) / 2), round(cw * s), round(ch * s), 0, 1};
+    }
     double s = fmin(dw / cw, dh / ch);
     MTLViewport vp = {floor((dw - cw * s) / 2), floor((dh - ch * s) / 2), round(cw * s), round(ch * s), 0, 1};
     if (fabs((dw / dh) / (cw / ch) - 1) < 0.01) vp = (MTLViewport){0, 0, dw, dh, 0, 1};

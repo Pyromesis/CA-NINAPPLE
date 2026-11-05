@@ -21,6 +21,7 @@ DM_RENDER_SCALE	range	0.5:1.0:0.05	1.0	fixups:RENDER_SCALE	Graphics	Render scale
 DM_OPMODE	choice	1=Docked,0=Handheld	DM_GAME_OPMODE	always	Graphics	Console mode	Docked uses the TV resolution (sharper); Handheld uses the handheld resolution (lighter).	level=basic
 DM_DYNAMIC_RESOLUTION	toggle	-	0	fixups:DYNAMIC_RESOLUTION	Graphics	Dynamic resolution	Lowers resolution between 70% and 100% under load instead of dropping frames.
 DM_PRESENT_UPSCALE	choice	off=Standard,metalfx=MetalFX	off	always	Graphics	Upscaling	MetalFX sharpens the scaled picture; it uses more GPU time and can add heat.
+DM_PRESENT_FIT	choice	fit=Fit (black bars),stretch=Stretch,fill=Fill (crop)	fit	platform:ios	Graphics	Screen fit	Fit keeps the game's shape with black bars; Stretch fills the screen and widens the picture; Fill zooms until the bars are gone and cuts the top and bottom.
 DM_TOUCH_HAPTICS	toggle	-	1	platform:ios	Controls	Touch feedback	A light tap when you press an on-screen button.
 DM_RUMBLE	toggle	-	1	always	Controls	Game rumble	The game's vibration on the phone or on a connected controller.	level=basic
 DM_RUMBLE_GAIN	range	0:3:0.1	1.0	always	Controls	Rumble strength	How strong the game's vibration is, from 0 to 300%.	needs=DM_RUMBLE=1
