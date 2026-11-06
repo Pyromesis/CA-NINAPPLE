@@ -97,6 +97,8 @@ static void tv_attach(void);
 @end
 static DmRootVC *g_root;
 static CGFloat g_picture_aspect = DM_PICTURE_16_9;   // the presented picture's width / height (front_picture_shape); main thread
+// DM_PICTURE_FIT, or the CA-NINAPPLE name of the same setting (DM_PRESENT_FIT) when an env.txt from an older build carries it
+static const char *picture_fit_env(void) { const char *e = getenv("DM_PICTURE_FIT"); return e && *e ? e : getenv("DM_PRESENT_FIT"); }
 static void launcher_done(void) { [g_root startGame]; }
 @implementation DmRootVC
 - (void)loadView { self.view = [DmRootView new]; }
@@ -151,8 +153,8 @@ static void launcher_done(void) { [g_root startGame]; }
     front_hud_env();   // before the process's first Metal device, which reads MTL_HUD_ENABLED (an env file's DM_METAL_HUD sets it in main.m already; GitHub issue #840)
     const char *dev = front_ios_device_check();   // that first device: a GPU without BC textures is refused here, not at launch, so the launcher's HUD switch counts
     if (dev) { [self showHint:[NSString stringWithFormat:@"This device is not supported.\n%s", dev]]; return; }   // the host does not start
-    self.fill = dm_picture_fill(getenv("DM_PICTURE_FIT"));
-    self.stretch = dm_picture_stretch(getenv("DM_PICTURE_FIT"));
+    self.fill = dm_picture_fill(picture_fit_env());
+    self.stretch = dm_picture_stretch(picture_fit_env());
     if (self.fill) LOG("front end: picture Fill (DM_PICTURE_FIT=fill), the 16:9 picture covers the screen in landscape and its edges are cropped");
     if (self.stretch) LOG("front end: picture Stretch (DM_PICTURE_FIT=stretch), the picture is widened to the whole screen");
     self.view.clipsToBounds = YES;   // with Fill the game view is larger than the screen
