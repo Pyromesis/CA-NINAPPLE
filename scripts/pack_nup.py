@@ -69,7 +69,7 @@ class Nup:
         self.path = Path(path)
         with open(self.path, 'rb') as f:   # the map keeps its own descriptor
             try: self.mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-            except ValueError: raise Error(f'{self.path}: empty file') from None
+            except (ValueError, OSError): raise Error(f'{self.path}: empty file') from None   # Windows raises OSError EINVAL for an empty file
         try: self._read()
         except BaseException:
             self.close(); raise

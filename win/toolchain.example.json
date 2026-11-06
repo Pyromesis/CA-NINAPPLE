@@ -1,0 +1,13 @@
+{
+  "llvm": "C:\\Program Files\\LLVM",
+  "metal_tools": "C:\\Program Files\\Metal Developer Tools",
+  "ios_sdk": "E:\\ProjectIOS\\nxnative-win\\win\\sdk\\out\\iPhoneOS.sdk",
+  "spirv_cross_dir": "C:\\VulkanSDK\\1.4.321.0\\Bin",
+  "glslangValidator_dir": "C:\\VulkanSDK\\1.4.321.0\\Bin",
+  "zstd_dir": "C:\\tools\\zstd",
+  "std_font": "C:\\Windows\\Fonts\\arial.ttf",
+  "ios_deployment": "26.0",
+  "metal_ios_target": "18.0",
+  "metal_macos_target": "15.0",
+  "bundle_prefix": "org.nxnativewindows"
+}
