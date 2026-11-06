@@ -374,6 +374,7 @@ del worktree `C:\Users\berna\nxw\NX2Apple-engine`:
 | `FileNotFoundError: …\RomFS.img\LD_C0_R.BIN` al derivar el perfil | `dm/tools/romfs.py` resolvía las rutas internas de una imagen RomFS con `/` y usaba `os.pread`, que no existen en Windows | `_resolve` normaliza `\`→`/`; `_File` abre con `O_BINARY` y lee con `lseek`+`read` (portado del motor estable `nxnative-win`) |
 | `[RED] this Mac's Metal compiler is not the one the shaders were tested with (…): metal_macosx … metalfe-custom-windows (tested: … 32023.922)` | En Windows el compilador Metal es el front-end propio (`metalfe-custom-windows`, 32023.850) y `dmsh_chain.lock` espera el de Xcode 27.2 | Añade `--allow-other-metal` al build (o `DM_ALLOW_OTHER_METAL=1`); en Windows es la única opción |
 | `AttributeError: module 'signal' has no attribute 'pthread_sigmask'` en `patch_nso.py` | `in_parallel` usa un pool `fork` y bloquea `SIGTERM` con `pthread_sigmask`; Windows no tiene ni uno ni otro | `in_parallel` cae a ejecución serie cuando falta `pthread_sigmask` |
+| `OSError: [WinError 87] The parameter is incorrect` en `shader_split.py` | Un worker devuelve su lista de shaders por la tubería de `multiprocessing`; en Pokopia un solo `.fdata` de KTGL produce 203.120 shaders (6,3 GB de datos) y no cabe | En Windows `shader_split.py` escanea en serie dentro del proceso (`_pool_init` + lista), sin `ProcessPoolExecutor` |
 
 Los juegos de Switch 2 (`.nup` o carpeta `base/updates/dlc`) no necesitan
 `prod.keys`. La guía completa está en

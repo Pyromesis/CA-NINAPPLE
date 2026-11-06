@@ -131,6 +131,7 @@ arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
 | Las pruebas de NUP borran un `.nup` mapeado | `PermissionError [WinError 32]`: es de la limpieza de la prueba, no del build |
 | `dm/tools/romfs.py` no encuentra los archivos dentro de `RomFS.img` | `_resolve` parte por `/` (Windows usa `\`) y `_File` usa `os.pread` (no existe en Windows): normaliza la ruta, abre con `O_BINARY` y lee con `lseek`+`read` |
 | `signal.pthread_sigmask` no existe en `patch_nso.py` | `in_parallel` cae a ejecución serie en Windows (no hay pool `fork` ni `pthread_sigmask`) |
+| `OSError: [WinError 87]` al escanear shaders | El resultado de un `.fdata` de KTGL (203.120 shaders, 6,3 GB) no cabe en la tubería de `multiprocessing`; en Windows el escaneo de `shader_split.py` corre en serie dentro del proceso |
 
 ## Pendiente
 
