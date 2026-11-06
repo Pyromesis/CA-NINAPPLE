@@ -118,6 +118,40 @@ traducir shaders con `[RED] this Mac's Metal compiler is not the one the shaders
 were tested with`. Es el mismo interruptor documentado por el motor
 (`ALLOW_OTHER_METAL` / `--allow-other-metal`).
 
+### Si el build se para en `translation chain tools do not match the lock file`
+
+El lock (`dm/gfx/tools/dmsh_chain.lock`) guarda las huellas del traductor, de
+`spirv-cross` y de los compiladores Metal **de macOS**. En Windows el traductor
+y `spirv-cross` son otros binarios, así que un repo recién clonado se detiene en
+`[4/6] iOS shaders` con:
+
+```
+[RED] translation chain tools do not match the lock file: spirv-cross: lock e37945d8e441d34d / actual 6702f1d74b2aaff0
+[RED] translation chain tools do not match the lock file: the translator was not built from the in-repo source:
+      embedded source 0bd66426675438a9 / in repo f08e2efd04100435 (rebuild dmsh_xlate)
+```
+
+No es un fallo del juego: hay que reconstruir el traductor con el fuente del repo
+y apuntar el lock a las herramientas nativas. En este PC:
+
+```powershell
+cd C:\Users\berna\nxw\NX2Apple-engine
+dotnet publish dm\gfx\tools\dmsh_xlate\dmsh_xlate.csproj -c Release -f net10.0 -o "$env:TEMP\xlate_build"
+Get-ChildItem "$env:TEMP\xlate_build" -File | Where-Object { $_.Name -ne 'dmsh_xlate.exe' } |
+  Copy-Item -Destination dm\gfx\tools\dmsh_xlate_bin -Force
+$env:SPIRV_CROSS = 'C:\VulkanSDK\1.4.363.0\Bin\spirv-cross.exe'
+python win\update_tools_lock.py
+python dm\gfx\tools\dmsh_chain.py --header
+```
+
+`update_tools_lock.py` cambia solo las líneas que dependen de Windows
+(`dmsh_xlate.dll`, las DLL de Ryujinx, `xlate_source` y `spirv-cross`) y deja las
+de Metal, que son las de macOS con las que se probaron los shaders.
+`dmsh_chain.py --header` sube la versión de la cadena (`DMSH_CHAIN`) y el host
+solo carga la carpeta `b-<V>` que le corresponde, así que hay que recompilar la
+app. El `spirv-cross` nativo es el del Vulkan SDK (`6702f1d7…`); el del repo
+(`spirv_cross_bin/spirv-cross`) es Mach-O y no arranca en Windows.
+
 Sin `-k` para Switch 2. El resto del flujo (firma con plumesign, instalación y
 arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
 
@@ -132,6 +166,7 @@ arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
 | `dm/tools/romfs.py` no encuentra los archivos dentro de `RomFS.img` | `_resolve` parte por `/` (Windows usa `\`) y `_File` usa `os.pread` (no existe en Windows): normaliza la ruta, abre con `O_BINARY` y lee con `lseek`+`read` |
 | `signal.pthread_sigmask` no existe en `patch_nso.py` | `in_parallel` cae a ejecución serie en Windows (no hay pool `fork` ni `pthread_sigmask`) |
 | `OSError: [WinError 87]` al escanear shaders | El resultado de un `.fdata` de KTGL (203.120 shaders, 6,3 GB) no cabe en la tubería de `multiprocessing`; en Windows el escaneo de `shader_split.py` corre en serie dentro del proceso |
+| `[RED] translation chain tools do not match the lock file` / `the translator was not built from the in-repo source` | El lock guarda las huellas de macOS; el traductor y `spirv-cross` de Windows son otros binarios | `win/update_tools_lock.py` reescribe solo esas líneas (deja las de Metal) y `dmsh_chain.py --header` sube la versión. Ver [Reconstruir el traductor](#si-el-build-se-para-en-translation-chain-tools-do-not-match-the-lock-file) |
 
 ## Pendiente
 
