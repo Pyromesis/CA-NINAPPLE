@@ -107,9 +107,16 @@ estable). Desde esa carpeta:
 
 ```powershell
 $env:PYTHONUTF8='1'
-python win\build_ipa_windows.py "C:\ruta\al\juego"          # carpeta con base/, updates/, dlc/
-python win\build_ipa_windows.py "C:\ruta\al\juego.nup"      # contenedor NUP de Switch 2
+python win\build_ipa_windows.py "C:\ruta\al\juego" --allow-other-metal          # carpeta con base/, updates/, dlc/
+python win\build_ipa_windows.py "C:\ruta\al\juego.nup" --allow-other-metal      # contenedor NUP de Switch 2
 ```
+
+`--allow-other-metal` es obligatorio en Windows: el compilador Metal del port es
+`metalfe-custom-windows` (32023.850) y el motor solo acepta por defecto el de
+Xcode 27.2 (32023.922). Sin la opción, cualquier juego NVN se detiene antes de
+traducir shaders con `[RED] this Mac's Metal compiler is not the one the shaders
+were tested with`. Es el mismo interruptor documentado por el motor
+(`ALLOW_OTHER_METAL` / `--allow-other-metal`).
 
 Sin `-k` para Switch 2. El resto del flujo (firma con plumesign, instalación y
 arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
@@ -122,6 +129,8 @@ arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
 | `dm/host/Makefile` añade `save_sync.c`, `web_apple.m`, dav1d y `host_msl` | `win/build_app.py` actualizado: lista de fuentes, includes de dav1d y generación de `host_msl_gen.h` con `dm/gfx/tools/host_msl.py` |
 | `mmap` de un `.nup` vacío lanza `OSError` en Windows | `scripts/pack_nup.py` lo trata como “archivo vacío” |
 | Las pruebas de NUP borran un `.nup` mapeado | `PermissionError [WinError 32]`: es de la limpieza de la prueba, no del build |
+| `dm/tools/romfs.py` no encuentra los archivos dentro de `RomFS.img` | `_resolve` parte por `/` (Windows usa `\`) y `_File` usa `os.pread` (no existe en Windows): normaliza la ruta, abre con `O_BINARY` y lee con `lseek`+`read` |
+| `signal.pthread_sigmask` no existe en `patch_nso.py` | `in_parallel` cae a ejecución serie en Windows (no hay pool `fork` ni `pthread_sigmask`) |
 
 ## Pendiente
 

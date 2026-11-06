@@ -371,6 +371,9 @@ del worktree `C:\Users\berna\nxw\NX2Apple-engine`:
 | `dm/host/Makefile changed (SRC= line)` | El motor nuevo añade `save_sync.c`, `web_apple.m`, dav1d y los shaders MSL del host | `win/build_app.py` actualizado; si vuelve a salir, compara la línea `SRC=`/`GFX=` con `host_sources()` |
 | `host_msl_gen.h: No such file` | En Mac lo genera `make`; en Windows no hay `make` | `win/build_app.py` lo genera con `dm/gfx/tools/host_msl.py --sdk iphoneos` |
 | `Error: the Mac platforms need a Mac` | `--platform mac` o `mac-app` en Windows | Es deliberado: usa iOS o compila en un Mac |
+| `FileNotFoundError: …\RomFS.img\LD_C0_R.BIN` al derivar el perfil | `dm/tools/romfs.py` resolvía las rutas internas de una imagen RomFS con `/` y usaba `os.pread`, que no existen en Windows | `_resolve` normaliza `\`→`/`; `_File` abre con `O_BINARY` y lee con `lseek`+`read` (portado del motor estable `nxnative-win`) |
+| `[RED] this Mac's Metal compiler is not the one the shaders were tested with (…): metal_macosx … metalfe-custom-windows (tested: … 32023.922)` | En Windows el compilador Metal es el front-end propio (`metalfe-custom-windows`, 32023.850) y `dmsh_chain.lock` espera el de Xcode 27.2 | Añade `--allow-other-metal` al build (o `DM_ALLOW_OTHER_METAL=1`); en Windows es la única opción |
+| `AttributeError: module 'signal' has no attribute 'pthread_sigmask'` en `patch_nso.py` | `in_parallel` usa un pool `fork` y bloquea `SIGTERM` con `pthread_sigmask`; Windows no tiene ni uno ni otro | `in_parallel` cae a ejecución serie cuando falta `pthread_sigmask` |
 
 Los juegos de Switch 2 (`.nup` o carpeta `base/updates/dlc`) no necesitan
 `prod.keys`. La guía completa está en
