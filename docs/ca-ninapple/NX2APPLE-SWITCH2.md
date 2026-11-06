@@ -51,8 +51,38 @@ el `prod.keys` de tu consola.
 
 NX2Apple publica `NX2Apple-windows-x64.zip` (unos 217 MB) en sus *releases*.
 Es la vía con interfaz gráfica; el motor que lleva dentro es el mismo nxnative
-con su pin y sus parches. En macOS pide macOS 13 o superior, Xcode 27.2 con el
-SDK de iOS y el .NET SDK 10 (el launcher instala este último).
+con su pin y sus parches. El zip trae 5.695 archivos: `NX2Apple.exe`, PySide6 y
+Python 3.12 embebidos en `_internal`, 14 *wheels*, y el motor completo en
+`engine` (500 MB, 3.126 archivos). No trae compiladores ni SDK.
+
+El propio launcher tiene su capa Windows (`_internal/nspb_qt/win/`): `doctor`,
+`fetch`, `sdk_fetch`, `build_app`, `macho_sign`, `fix_ipa_modes`, `shim`
+(`xcrun`/`xcodebuild` falsos) y `mp_worker`. Se usa desde la GUI o desde consola:
+
+```powershell
+python -m nspb_qt.win.doctor              # qué falta
+python -m nspb_qt.win.doctor --fix        # baja LLVM-MinGW fijado
+python -m nspb_qt.win.doctor --sdk        # baja el SDK de iPhoneOS (git xybp888/iOS-SDKs)
+python -m nspb_qt.win.doctor --sdk-xip Xcode.xip
+python -m nspb_qt.win.doctor --import-sdk D:\SDKs\iPhoneOS26.0.sdk
+```
+
+Qué instala solo y qué no:
+
+| Componente | Launcher oficial |
+|---|---|
+| LLVM/clang + `ld64.lld` (LLVM-MinGW fijado; renombra `ld.lld.exe`) | lo descarga con `--fix` |
+| SDK de iPhoneOS 26+ (hace falta Metal 4) | lo descarga con `--sdk` (o lo importas) |
+| Metal Developer Tools para Windows (`metal.exe`, `metallib.exe`) | **manual**, con Apple ID |
+| .NET 10 (para `nx_extract` y `dmsh_xlate`) | **manual** |
+| `zstd` | obligatorio; la GUI lo descarga, por consola hay que ponerlo a mano |
+| `spirv-cross`, `glslangValidator` | vienen en `engine/dm/gfx/tools/spirv_cross_bin` |
+| Fuente Unicode (`STD_FONT`) | opcional, cualquier TTF amplio |
+
+`metal-tt` (el archivador de pipelines) no viene en las herramientas Metal de
+Windows, así que el archivo de pipelines offline queda desactivado en esa vía.
+
+En macOS pide macOS 13 o superior, Xcode 27.2 con el SDK de iOS y el .NET SDK 10.
 
 ## Rendimiento: qué mejora y qué no
 
