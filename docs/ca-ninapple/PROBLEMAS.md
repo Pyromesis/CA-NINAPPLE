@@ -32,6 +32,8 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | `plumesign … --udid <UDID>` dice `Device ID … not found` | Su `--udid` espera el id numérico de usbmuxd, no el UDID | `python win\usbmuxd_id.py` y pasa ese número. Ver [Instalar en un segundo iPhone](INSTALAR-DESDE-PC.md#a2b-instalar-en-un-segundo-iphone) |
 | Al abrir sale «Desarrollador no confiable» | Falta confiar en el certificado de desarrollo en ese teléfono | Ajustes → General → VPN y gestión de dispositivos → Apple Development: <cuenta> → Confiar; una vez por teléfono. Abrir la app otra vez no lo arregla |
 | Sale «game data needed» y no arranca | El IPA es de build partida y falta `Documents/romfs.img` | Cópialo con `ios fsync push` (17 GB en TotK). Ver [Copiar los datos del juego](INSTALAR-DESDE-PC.md#a2c-copiar-los-datos-del-juego-build-partida) |
+| `ios install` falla en `PostflightingApplication` (70 %) con `maximum number of installed apps using a free developer profile` | Ya hay 3 apps instaladas con el perfil gratuito | Desinstala una con `ios uninstall <bundle>` y repite. Ver [El perfil gratuito solo deja tres apps](#el-perfil-gratuito-solo-deja-tres-apps-instaladas) |
+| `ios fsync push` de `romfs.img` se corta con `framedIPv6Reader … EOF` y luego «could not connect to RSD» | El túnel de usuarios se cayó a mitad de la copia; el archivo queda a medias (`invalid RomFS image … errno=22`) | Reinicia el túnel, borra el `romfs.img` parcial y repite el push. Ver [La copia de romfs.img se corta a mitad](#la-copia-de-romfsimg-se-corta-a-mitad) |
 | La tele no recibe la imagen del juego | La escena de pantalla externa no llegó a conectar | Busca `front end: TV output registered` en `log.txt`. Ver [TV y AirPlay](TV-AIRPLAY.md) |
 
 ## Pantalla negra con música
@@ -245,6 +247,57 @@ Solución: que el RomFS no viaje dentro del IPA.
 
 `plumesign device --install` **no** sirve como alternativa: con el túnel de iOS 17+ no ve el
 dispositivo (`Error: Other error: Device ID … not found`).
+
+## El perfil gratuito solo deja tres apps instaladas
+
+Síntoma: la instalación llega al 70 % (`PostflightingApplication`) y termina con:
+
+```
+{"level":"ERROR","msg":"failed writing","err":"your app is not properly signed for this device …
+ 'ApplicationVerificationFailed' errorDescription:'This device has reached the maximum number of
+ installed apps using a free developer profile: {(\n \"986S29SKK3.org…\",\n …)}'"}
+```
+
+No es la firma: la cuenta gratuita permite **tres apps a la vez** con perfil de desarrollo, y las
+tres plazas están ocupadas. Cuentan las que están instaladas, no las que hayas borrado del PC.
+Lista las tuyas con `ios apps` y busca los bundle ID que empiezan por el Team ID:
+
+```powershell
+ios apps *> apps.json
+python -c "import json; [print(a['CFBundleIdentifier'], '|', a.get('CFBundleDisplayName')) for a in json.load(open('apps.json', encoding='utf-16')) if 'nxnative' in a['CFBundleIdentifier'] or 'livecontainer' in a['CFBundleIdentifier'].lower()]"
+```
+
+Desinstala la que sobre con `ios uninstall <bundle>` y repite `ios install`. Ojo: al desinstalar se
+borran también sus `Documents` (el `romfs.img` incluido), así que habrá que volver a copiarlos.
+
+En este iPhone (6/11/2026) las tres eran Zelda TotK, Mario Kart 8 y LiveContainer; Silksong entró
+al quitar LiveContainer.
+
+## La copia de romfs.img se corta a mitad
+
+Síntoma: `ios fsync push` de un archivo grande (6-17 GB) tarda varios minutos y termina con:
+
+```
+userspace tunnel inbound dispatch loop stopped … framedIPv6Reader: failed to read IPv6 header: EOF
+userspace tunnel data plane stopped unexpectedly, tearing down tunnel
+```
+
+y los comandos siguientes fallan con `could not connect to RSD … ConnectUserSpaceTunnel: failed to
+dial … actively refused it`. El `romfs.img` queda a medias y el juego lo dice al arrancar:
+`[RED] boot: invalid RomFS image …/romfs.img (errno=22)` y `boot: game files not found`.
+
+Qué hacer, en orden:
+
+1. Comprueba el túnel con `ios tunnel ls`. Si no hay túnel o el puerto no responde:
+   `ios tunnel stopagent` y `ios tunnel start --userspace` en una ventana aparte (se queda
+   corriendo). Conecta el iPhone por cable y déjalo desbloqueado.
+2. Borra el archivo a medias: `ios fsync --app=<bundle> rm --path=/Documents/romfs.img`.
+3. Repite el push completo (`ios fsync --app=<bundle> push --srcPath=<romfs.img> --dstPath=/Documents`).
+4. Abre el juego y mira `Documents/log.txt`: debe salir `boot: game files …/Documents/romfs.img`
+   sin `invalid RomFS`.
+
+Medido en Silksong (6,29 GB): el primer intento murió a los 6:40 y el segundo tardó ~7,5 min.
+Tener la app en primer plano no evita el corte; lo que importa es que el túnel siga vivo.
 
 ## UnicodeEncodeError al imprimir el progreso
 
