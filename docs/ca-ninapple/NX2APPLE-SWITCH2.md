@@ -1,0 +1,103 @@
+# NX2Apple y los juegos de Switch 2 en Windows
+
+Estado a 6 de noviembre de 2026. Este documento explica qué es
+[NX2Apple](https://github.com/LNPANDY/NX2Apple), qué parte sirve en un PC con
+Windows, qué hay que instalar y qué se puede esperar de rendimiento.
+
+## Qué es y de dónde sale el soporte de Switch 2
+
+NX2Apple **no es un emulador ni un motor**: es un *launcher* (una app de
+escritorio) que hace de interfaz para [nxnative](https://github.com/seedds/nxnative).
+El trabajo real —reescribir los módulos del juego, el host de Horizon, NVN sobre
+Metal y el perfil de cada juego— está en **nxnative**.
+
+El soporte de **Switch 2** también está en el motor, no en el launcher:
+
+| Pieza | Dónde está |
+|---|---|
+| GPU NVN2 / *Ounce* (Ampere) traducida a Metal | `dm/gfx/nvn/`, `dm/gfx/tools/dmsh_ampere.py` |
+| Shaders Ampere (SPIR-V → MSL) | `dm/gfx/tools/shader_split.py` |
+| Contenedores `.nup` sin `prod.keys` | `scripts/pack_nup.py` |
+| Perfiles `0400…` (Ocarina of Time, Kirby Air Riders, Pokopia, Mario Kart World…) | `dm/games/` |
+
+La rama `main` de nxnative recibe versiones nuevas casi a diario. El *pin* que
+usa NX2Apple 1.2.3 es `88c7e03f51e3`; el motor integrado aquí
+(`C:\Users\berna\nxw\NX2Apple-engine`, rama `switch2-engine`) parte de
+`c229bd7d`, **6 commits por delante y 0 por detrás** de ese pin, así que ya
+incluye todo lo que trae NX2Apple y las correcciones posteriores.
+
+## Qué hay que instalar
+
+### En este PC (Windows), para compilar IPAs con el motor nuevo
+
+Nada nuevo si ya compilas IPAs de Switch 1 en este equipo. `python win\doctor.py`
+del motor nuevo comprueba lo mismo de siempre y hoy sale todo en `[ok ]`:
+
+| Herramienta | Estado en este PC |
+|---|---|
+| Python 3.13 con `lz4`, `capstone`, `fonttools`, `Pillow`, `zstd` | instalado |
+| .NET SDK 10 (extractor `nx_extract`) | 10.0.400 |
+| LLVM `clang` + `ld64.lld` | instalado |
+| SDK de iPhoneOS 27.1 (extraído de Xcode) | `C:\Users\berna\nxw\nxnative-win\win\sdk\out\iPhoneOS.sdk` |
+| Compilador Metal para Windows (`metal.exe`, `metallib.exe`) | instalado |
+| `spirv-cross`, `glslangValidator`, `zstd` | instalados |
+| Traductor `dmsh_xlate.dll` | en el propio repo |
+
+Para un juego de Switch 2 **no hace falta `prod.keys`**: los `.nup` y las
+ carpetas `base/updates/dlc` van sin cifrar. Para Switch 1 sigue haciendo falta
+el `prod.keys` de tu consola.
+
+### Si prefieres el launcher oficial
+
+NX2Apple publica `NX2Apple-windows-x64.zip` (unos 217 MB) en sus *releases*.
+Es la vía con interfaz gráfica; el motor que lleva dentro es el mismo nxnative
+con su pin y sus parches. En macOS pide macOS 13 o superior, Xcode 27.2 con el
+SDK de iOS y el .NET SDK 10 (el launcher instala este último).
+
+## Rendimiento: qué mejora y qué no
+
+- **Juegos de Switch 1**: el motor nuevo no es “más fps” por sí solo. Lo que
+  cambia son 465 commits de correcciones del host (mando por jugador, tablas de
+  uniform buffers, servicios de captura, encadenado de shaders, pipelines de
+  Metal 4…). Algunas quitan trabajo por fotograma y otras arreglan dibujado; la
+  ganancia concreta depende del juego y aquí no se ha medido.
+- **Juegos de Switch 2**: es soporte nuevo, no una optimización. El juego corre
+  nativo sobre la GPU de Apple con NVN2 traducido a Metal. Las notas de nxnative
+  (en Mac) dan **60 fps en Kirby Air Riders**, **unos 59 fps en Ocarina of Time
+  (Switch 2)** y **unos 60 fps en Pokopia**; en iPhone no hay pruebas publicadas.
+- El límite en iPhone será la **memoria**: el perfil de Pokopia pide 9 GB
+  (`mem_reserve 0x270000000`, `app_pool 0x240000000`), el mismo esquema que
+  Donkey Kong Bananza. Si el juego no cabe, iOS lo cierra al arrancar.
+
+## Cómo se compila con este repo
+
+La capa Windows vive en la rama `switch2-engine` del worktree
+`C:\Users\berna\nxw\NX2Apple-engine` (no en `main`, que sigue con el motor
+estable). Desde esa carpeta:
+
+```powershell
+$env:PYTHONUTF8='1'
+python win\build_ipa_windows.py "C:\ruta\al\juego"          # carpeta con base/, updates/, dlc/
+python win\build_ipa_windows.py "C:\ruta\al\juego.nup"      # contenedor NUP de Switch 2
+```
+
+Sin `-k` para Switch 2. El resto del flujo (firma con plumesign, instalación y
+arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
+
+## Qué se tocó para que el motor nuevo compile en Windows
+
+| Problema | Solución |
+|---|---|
+| `dm/tools/tree_tar.py` importa `fcntl` y abre la carpeta padre como archivo | `win/pyshim/fcntl.py` (sin `flock`) y guarda en `tree_tar.py`: sin bloqueo, el build ya va en serie |
+| `dm/host/Makefile` añade `save_sync.c`, `web_apple.m`, dav1d y `host_msl` | `win/build_app.py` actualizado: lista de fuentes, includes de dav1d y generación de `host_msl_gen.h` con `dm/gfx/tools/host_msl.py` |
+| `mmap` de un `.nup` vacío lanza `OSError` en Windows | `scripts/pack_nup.py` lo trata como “archivo vacío” |
+| Las pruebas de NUP borran un `.nup` mapeado | `PermissionError [WinError 32]`: es de la limpieza de la prueba, no del build |
+
+## Pendiente
+
+- Ningún juego de Switch 2 se ha empaquetado ni probado todavía en iPhone
+  (faltan los archivos de Pokopia; ver [PROBLEMAS.md](PROBLEMAS.md)).
+- `--seen-shaders` (compilar solo los shaders ya vistos) sigue siendo solo para
+  Mac; en iOS hay que traducir el mapa completo, que en Pokopia son 131.426
+  shaders.
+- Las plataformas `mac` y `mac-app` se rechazan en Windows con un mensaje claro.

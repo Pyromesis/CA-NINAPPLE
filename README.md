@@ -21,6 +21,7 @@ en el iPhone o iPad. Aquí no hay juegos, llaves ni SDK de Apple.
 | [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md) | paso a paso completo: firmar, instalar y comprobar, con errores y soluciones |
 | [Mandos](docs/ca-ninapple/MANDOS.md) | Xbox y PlayStation por Bluetooth, mapeo de botones y problemas |
 | [TV y AirPlay](docs/ca-ninapple/TV-AIRPLAY.md) | el juego a 16:9 en la tele; el iPhone queda de mando |
+| [NX2Apple y Switch 2](docs/ca-ninapple/NX2APPLE-SWITCH2.md) | el motor nuevo, qué instalar y qué se puede esperar de rendimiento |
 | [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]`, builds partidos con XCI |
 | [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
 

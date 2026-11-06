@@ -302,6 +302,25 @@ python win\build_ipa_windows.py "C:\Juegos\Pokemon" -k "C:\ruta\a\prod.keys"
 `build.ps1` además pone la consola en UTF-8, así que evita el `UnicodeEncodeError` de la sección
 anterior. El script de `scripts\` sigue siendo el correcto en macOS y Linux.
 
+## El motor nuevo (Switch 2) falla en Windows
+
+Al portar `seedds/nxnative` (el motor con soporte de Switch 2) sobre la capa de
+Windows aparecieron estos fallos; están resueltos en la rama `switch2-engine`
+del worktree `C:\Users\berna\nxw\NX2Apple-engine`:
+
+| Mensaje | Causa | Solución |
+|---|---|---|
+| `ModuleNotFoundError: No module named 'fcntl'` | `dm/tools/tree_tar.py` importa `fcntl` para bloquear la carpeta que empaqueta | `win/pyshim/fcntl.py` con `flock` inerte; `tree_tar.py` acepta que no haya `fcntl` |
+| `OSError: [Errno 22] Invalid argument: '…\game.nup'` | `mmap` de un archivo vacío en Windows | `scripts/pack_nup.py` lo trata como “archivo vacío” |
+| `PermissionError: [WinError 32] … being used by another process` al borrar un `.nup` | La prueba borra el archivo mientras sigue mapeado | Es de la limpieza de la prueba, no del build: el archivo se cierra al salir del proceso |
+| `dm/host/Makefile changed (SRC= line)` | El motor nuevo añade `save_sync.c`, `web_apple.m`, dav1d y los shaders MSL del host | `win/build_app.py` actualizado; si vuelve a salir, compara la línea `SRC=`/`GFX=` con `host_sources()` |
+| `host_msl_gen.h: No such file` | En Mac lo genera `make`; en Windows no hay `make` | `win/build_app.py` lo genera con `dm/gfx/tools/host_msl.py --sdk iphoneos` |
+| `Error: the Mac platforms need a Mac` | `--platform mac` o `mac-app` en Windows | Es deliberado: usa iOS o compila en un Mac |
+
+Los juegos de Switch 2 (`.nup` o carpeta `base/updates/dlc`) no necesitan
+`prod.keys`. La guía completa está en
+[NX2APPLE-SWITCH2.md](NX2APPLE-SWITCH2.md).
+
 ## Recopilar un informe
 
 ```powershell
