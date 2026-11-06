@@ -248,6 +248,11 @@ Solución: que el RomFS no viaje dentro del IPA.
 `plumesign device --install` **no** sirve como alternativa: con el túnel de iOS 17+ no ve el
 dispositivo (`Error: Other error: Device ID … not found`).
 
+Al **re-firmar** un `.app` que ya venía firmado con la cuenta, `plumesign` añade otra vez el
+Team ID al bundle ID: queda `…010013c00e930000.986S29SKK3.986S29SKK3`. La app funciona, pero
+`ios fsync --app=…` tiene que usar ese ID doble (míralo con `ios apps`). Para evitarlo, firma el
+`.app` **sin firmar** que hay dentro del IPA original en vez del ya firmado.
+
 ## El perfil gratuito solo deja tres apps instaladas
 
 Síntoma: la instalación llega al 70 % (`PostflightingApplication`) y termina con:
