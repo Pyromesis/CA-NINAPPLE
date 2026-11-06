@@ -24,6 +24,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | La app se llama distinto o el bundle ID no es el del build | El firmador los sobreescribió | Mantén el nombre y el bundle ID del build en la herramienta de firma |
 | Va lento, se calienta y baja de FPS | GPU al límite | *Render scale* al 75 %, *Console mode: Handheld*, *Upscaling: Standard* |
 | El personaje va más rápido de lo normal (Zelda) | El IPA es de una versión del juego sin los parches del frame step, y el host fija los presentes a 30 o 60 | Pon `DM_FPS_TARGET=0` en `Documents/env.txt` o elige *Game's own* en *Frame rate*. Ver [Va más rápido de lo normal](#va-más-rápido-de-lo-normal) |
+| Mario Kart 8 va al doble de velocidad pero el contador marca 60 | *Performance → Frame order* en **Newest**: el display link descarta los frames viejos y el juego corre por delante | Ponlo en **In order** (`DM_PRESENT_FIFO=1`, el valor por defecto). Ver [Mario Kart 8: Frame order](#mario-kart-8-frame-order-en-newest) |
 | El build muere con `a split build copies the RomFS as a folder…` | El XCI o el NSP se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con una imagen RomFS](#el-build-partido-falla-con-una-imagen-romfs) |
 | `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
 | `ios install` termina con `ExtractionFailed` | El firmador dejó el ejecutable en `0644` | `python win\fix_ipa_mode.py <IPA firmado>` y reinstala. Ver [La instalación falla con ExtractionFailed](#la-instalación-falla-con-extractionfailed) |
@@ -320,6 +321,17 @@ la velocidad vuelve a ser la normal. En un IPA con este cambio, elige *Game's ow
 **Frame rate**. Si consigues la actualización 1.4.3 (v720896), el perfil registrado ya trae los
 parches y 30/60 funcionan a velocidad correcta. En la referencia:
 [A frame-rate cap on a build without the frame-step stubs](../reference/frame-rate.md#a-frame-rate-cap-on-a-build-without-the-frame-step-stubs).
+
+### Mario Kart 8: *Frame order* en Newest
+
+En Mario Kart 8 Deluxe el juego iba al doble de velocidad aunque el contador de FPS marcara 60.
+La opción **Performance → Frame order** estaba en *Newest* (`DM_PRESENT_FIFO=0`): el display link
+toma el frame más reciente de cada tick y descarta los anteriores, así que el juego no recibe la
+contrapresión del present y avanza dos frames por tick. Los frames fusionados no cuentan en el
+contador, por eso seguía mostrando 60.
+
+Solución: **Performance → Frame order → In order** (`DM_PRESENT_FIFO=1`, el valor por defecto).
+No hace falta recompilar ni tocar `env.txt`; se cambia en el launcher y se vuelve a abrir el juego.
 
 ## La televisión no muestra el juego
 
