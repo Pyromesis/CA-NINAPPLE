@@ -42,6 +42,18 @@ if (os.name == 'nt' or os.environ.get('NXW_LINUX')) and not os.environ.get('NXW_
                 _time.sleep(0.05 * (i + 1))
     os.replace = _win_replace
 
+    # os.pread (POSIX): Windows has no positional read. dmsh_build.py reads the shader packages' records at offsets with it, and pack_ipa.py the old
+    # IPA's entries; both open the descriptor in binary mode (dmsh_build.py adds O_BINARY there, pack_ipa.py uses open('rb')), so a plain read is the same bytes
+    if not hasattr(os, 'pread'):
+        def _pread(fd, n, off):
+            here = os.lseek(fd, 0, os.SEEK_CUR)
+            try:
+                os.lseek(fd, off, os.SEEK_SET)
+                return os.read(fd, n)
+            finally:
+                os.lseek(fd, here, os.SEEK_SET)
+        os.pread = _pread
+
     class _NoLib:
         def __getattr__(self, name): raise AttributeError(f'{name} (no process-wide C library on Windows)')
     class _CCCrypt:
