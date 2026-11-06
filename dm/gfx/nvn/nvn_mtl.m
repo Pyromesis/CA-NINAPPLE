@@ -13310,10 +13310,30 @@ static id<MTLTexture> present_raw_src(id<MTLTexture> src) {
     if (!v) { RED_ONCE(69, "present: cannot create a non-sRGB view of the sRGB swapchain texture (format %lu); presenting the decoded values", (unsigned long)src.pixelFormat); return src; }
     return v;
 }
+// The screen fit choice (DM_PICTURE_FIT, the launcher's Picture setting: fit, stretch or fill; the older DM_PRESENT_FIT of CA-NINAPPLE is read when it is unset):
+// fit (the default) keeps the picture's aspect ratio with black bars; stretch fills the canvas and widens the picture; fill scales uniformly until the bars are gone,
+// cropping the top and bottom (the iOS front end also crops the view, DmLayout.h). Read once: the launcher sets it before the host starts, env.txt before that.
+static int present_fit_mode(void) {
+    static int v = -1;
+    if (v >= 0) return v;
+    const char *e = getenv("DM_PICTURE_FIT");
+    if (!e || !*e) e = getenv("DM_PRESENT_FIT");
+    if (e && !strcmp(e, "stretch")) v = 1;
+    else if (e && !strcmp(e, "fill")) v = 2;
+    else { v = 0; if (e && *e && strcmp(e, "fit")) MLOG("[RED] DM_PICTURE_FIT=%s: fit, stretch or fill; keeping fit", e); }
+    MLOG("screen fit (DM_PICTURE_FIT): %s", v == 1 ? "stretch, the picture fills the screen and is widened" : v == 2 ? "fill, zoomed until the black bars are gone (the top and bottom are cropped)" : "fit, the picture's aspect ratio kept with black bars");
+    return v;
+}
 // The rectangle of the canvas (dw x dh) the picture (pw x ph) is drawn into: the picture's aspect ratio kept and centred, black bars in the rest (no stretching when the screen's ratio
 // differs from the game's, e.g. iPhone about 19.5:9 against the game's 16:9); when the ratios differ by under 1 % (the remainder from a game width that is a multiple of 8 in the
 // full-screen setup, e.g. 1952x900 against 2868x1320 differs by 0.17 %) the whole canvas, leaving no border of a few pixels
 static MTLViewport present_viewport(double pw, double ph, double dw, double dh) {
+    int fit = present_fit_mode();
+    if (fit == 1) return (MTLViewport){0, 0, dw, dh, 0, 1};   // stretch
+    if (fit == 2) {   // fill: the taller of the two scales wins, the rest is cropped by the render target's bounds
+        double sf = fmax(dw / pw, dh / ph);
+        return (MTLViewport){floor((dw - pw * sf) / 2), floor((dh - ph * sf) / 2), round(pw * sf), round(ph * sf), 0, 1};
+    }
     double s = fmin(dw / pw, dh / ph);
     MTLViewport vp = {floor((dw - pw * s) / 2), floor((dh - ph * s) / 2), round(pw * s), round(ph * s), 0, 1};
     if (fabs((dw / dh) / (pw / ph) - 1) < 0.01) vp = (MTLViewport){0, 0, dw, dh, 0, 1};

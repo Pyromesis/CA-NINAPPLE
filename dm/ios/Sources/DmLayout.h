@@ -31,7 +31,8 @@ static inline CGRect dm_aspect_fill(CGRect b, CGFloat aspect) {
     return CGRectMake(CGRectGetMidX(b) - w / 2, CGRectGetMidY(b) - h / 2, w, h);
 }
 
-static inline BOOL dm_picture_fill(const char *_Nullable value) { return value && !strcmp(value, "fill"); }   // DM_PICTURE_FIT: fit (default) or fill
+static inline BOOL dm_picture_fill(const char *_Nullable value) { return value && !strcmp(value, "fill"); }   // DM_PICTURE_FIT: fit (default), stretch or fill
+static inline BOOL dm_picture_stretch(const char *_Nullable value) { return value && !strcmp(value, "stretch"); }   // the CA-NINAPPLE Screen fit: the picture is widened to the screen
 
 static inline CGRect dm_horizontal_division(CGRect b, CGRect division) {
     if (CGRectIsNull(division) || division.size.width <= division.size.height) return CGRectNull;
@@ -69,6 +70,13 @@ static inline DmLayout dm_layout_pad_only(CGRect b) { return (DmLayout){ CGRectZ
 // area above the controls, where cropping a small picture would cost more than the bars.
 static inline DmLayout dm_layout_picture(DmLayout l, CGRect b, BOOL fill, CGFloat aspect) {
     if (fill && !l.separated && !CGRectIsEmpty(b)) l.game = dm_aspect_fill(b, aspect);
+    return l;
+}
+
+// Picture "Stretch" (DM_PICTURE_FIT=stretch, CA-NINAPPLE's Screen fit): the game view takes the whole screen and nvn_mtl.m widens the picture into it (present_viewport),
+// so the picture fills the screen without black bars and without cropping. A split layout (portrait, tabletop) keeps its fitted picture.
+static inline DmLayout dm_layout_picture_stretch(DmLayout l, CGRect b, BOOL stretch) {
+    if (stretch && !l.separated && !CGRectIsEmpty(b)) l.game = b;
     return l;
 }
 

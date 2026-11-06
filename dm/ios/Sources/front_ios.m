@@ -85,6 +85,7 @@ static void tv_attach(void);
 @property (nonatomic) BOOL launched;
 @property (nonatomic, strong) id tv;   // the TV scene accessory's registration (iOS 27)
 @property (nonatomic) BOOL fill;   // DM_PICTURE_FIT=fill: in landscape the picture covers the screen, its edges cropped (DmLayout.h dm_layout_picture)
+@property (nonatomic) BOOL stretch;   // DM_PICTURE_FIT=stretch: the picture is widened to the whole screen (DmLayout.h dm_layout_picture_stretch)
 @property (nonatomic) BOOL partiallyOpen;   // an iPhone Duo's hinge half open (UIHingeInteraction, iOS 27.1)
 @property (nonatomic) NSInteger hingeStatus;
 @property (nonatomic, copy) NSString *layoutLog;   // the last layout line logged
@@ -151,7 +152,9 @@ static void launcher_done(void) { [g_root startGame]; }
     const char *dev = front_ios_device_check();   // that first device: a GPU without BC textures is refused here, not at launch, so the launcher's HUD switch counts
     if (dev) { [self showHint:[NSString stringWithFormat:@"This device is not supported.\n%s", dev]]; return; }   // the host does not start
     self.fill = dm_picture_fill(getenv("DM_PICTURE_FIT"));
+    self.stretch = dm_picture_stretch(getenv("DM_PICTURE_FIT"));
     if (self.fill) LOG("front end: picture Fill (DM_PICTURE_FIT=fill), the 16:9 picture covers the screen in landscape and its edges are cropped");
+    if (self.stretch) LOG("front end: picture Stretch (DM_PICTURE_FIT=stretch), the picture is widened to the whole screen");
     self.view.clipsToBounds = YES;   // with Fill the game view is larger than the screen
     self.view.window.traitOverrides.preferredContentSizeCategory = UIContentSizeCategorySmall;   // UIKit draws the in-game menu (GameMenu.swift) in this window: it keeps one compact text size over the game, whatever the system's text size
     self.game = [[DmGameView alloc] initWithFrame:self.view.bounds];
@@ -187,9 +190,10 @@ static void launcher_done(void) { [g_root startGame]; }
     UIEdgeInsets gameInsets = dm_game_safe_insets(b, self.view.safeAreaInsets, duoPortrait);
     BOOL onTV = self.game.superview != self.view;   // the TV's view lays the picture out; the phone is all pad
     DmLayout layout = onTV ? dm_layout_pad_only(b) : dm_layout_picture(dm_layout(b, gameInsets, self.partiallyOpen, division, g_picture_aspect), b, self.fill, g_picture_aspect);
+    if (!onTV) layout = dm_layout_picture_stretch(layout, b, self.stretch);
     if (!onTV) self.game.frame = layout.game;
     layout.topSafeOnly = duoPortrait;
-    NSString *line = [NSString stringWithFormat:@"%@, hinge %ld%s, divisions %@, picture %@, controls %@", onTV ? @"pad only (picture on the TV)" : layout.separated ? @"split" : self.fill ? @"overlay, Fill" : @"overlay",
+    NSString *line = [NSString stringWithFormat:@"%@, hinge %ld%s, divisions %@, picture %@, controls %@", onTV ? @"pad only (picture on the TV)" : layout.separated ? @"split" : self.fill ? @"overlay, Fill" : self.stretch ? @"overlay, Stretch" : @"overlay",
                       (long)self.hingeStatus, self.partiallyOpen ? " (half open)" : "", regionLog, NSStringFromCGRect(layout.game), NSStringFromCGRect(layout.controls)];
     if (![line isEqualToString:self.layoutLog]) { self.layoutLog = line; LOG("front end: layout %s", line.UTF8String); }
     self.pad.frame = b;
@@ -265,7 +269,11 @@ void front_picture_shape(int w, int h) {   // front.h: the views take the presen
 bool dm_setting_live(const char *env, const char *value) {
     if (!env || !g_root.game) return false;
     if (!strcmp(env, "DM_PICTURE_FIT")) {
-        if (value) { g_root.fill = dm_picture_fill(value); [g_root.view setNeedsLayout]; LOG("front end: picture %s (in-game menu)", g_root.fill ? "Fill" : "Fit"); }
+        if (value) {
+            g_root.fill = dm_picture_fill(value); g_root.stretch = dm_picture_stretch(value);
+            [g_root.view setNeedsLayout];
+            LOG("front end: picture %s (in-game menu)", g_root.fill ? "Fill" : g_root.stretch ? "Stretch" : "Fit");
+        }
         return true;
     }
     if (!strcmp(env, "DM_OPMODE")) {
