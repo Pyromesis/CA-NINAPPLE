@@ -27,6 +27,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | El build muere con `a split build copies the RomFS as a folder…` | El XCI o el NSP se extrajo como una sola `RomFS.img` | Usa `--romfs separate` (`-RomfsSeparate`). Ver [El build partido falla con una imagen RomFS](#el-build-partido-falla-con-una-imagen-romfs) |
 | `UnicodeEncodeError` con `'\u2713'` | Consola de Windows en cp1252 | `build.ps1`, o `PYTHONUTF8=1` y `PYTHONIOENCODING=utf-8`. Ver [UnicodeEncodeError al imprimir el progreso](#unicodeencodeerror-al-imprimir-el-progreso) |
 | `ios install` termina con `ExtractionFailed` | El firmador dejó el ejecutable en `0644` | `python win\fix_ipa_mode.py <IPA firmado>` y reinstala. Ver [La instalación falla con ExtractionFailed](#la-instalación-falla-con-extractionfailed) |
+| `ios install` se corta **siempre a los ~2 min** con `failed writing … wsasend` en un IPA grande | El IPA lleva dentro una entrada de **más de 4 GiB** (ZIP64): el extractor del iPhone la rechaza | Saca el RomFS del IPA (`--romfs separate`) y copia `romfs.img` a *Documentos*. Ver [El IPA con una entrada de más de 4 GiB se corta a los 2 min](#el-ipa-con-una-entrada-de-más-de-4-gib-se-corta-a-los-2-min) |
 | `plumesign … --udid <UDID>` dice `Device ID … not found` | Su `--udid` espera el id numérico de usbmuxd, no el UDID | `python win\usbmuxd_id.py` y pasa ese número. Ver [Instalar en un segundo iPhone](INSTALAR-DESDE-PC.md#a2b-instalar-en-un-segundo-iphone) |
 | Al abrir sale «Desarrollador no confiable» | Falta confiar en el certificado de desarrollo en ese teléfono | Ajustes → General → VPN y gestión de dispositivos → Apple Development: <cuenta> → Confiar; una vez por teléfono. Abrir la app otra vez no lo arregla |
 | Sale «game data needed» y no arranca | El IPA es de build partida y falta `Documents/romfs.img` | Cópialo con `ios fsync push` (17 GB en TotK). Ver [Copiar los datos del juego](INSTALAR-DESDE-PC.md#a2c-copiar-los-datos-del-juego-build-partida) |
@@ -189,6 +190,60 @@ idempotente: si ya está bien, no cambia nada.
 Antes de esto puede aparecer un fallo distinto, `failed writing … Read: failed to read message
 length: EOF`: es una conexión que se cortó (pantalla bloqueada o cable). Reintenta con el iPhone
 desbloqueado.
+
+## El IPA con una entrada de más de 4 GiB se corta a los 2 min
+
+Síntoma: `ios install` se queda en `inittransfer` y a los **~2 minutos exactos**
+(cuenta atrás muy constante: 1:57, 2:04, 3:21 según el tamaño) termina con:
+
+```
+{"level":"ERROR","msg":"failed writing","err":"write tcp 127.0.0.1:…->127.0.0.1:27015: wsasend: An existing connection was forcibly closed by the remote host."}
+```
+
+No es el límite de 3 apps del perfil gratuito (ese aparece más tarde, en
+`PostflightingApplication` al 70 %), ni el espacio del teléfono, ni el túnel, ni la firma.
+El log del **iPhone** lo dice claro:
+
+```powershell
+ios syslog --udid <UDID> *> syslog.txt   # en otra ventana, durante la instalación
+```
+
+```text
+streaming_zip_conduit(StreamingZip) <Error>: Stream extractor got error:
+  Error Domain=SZExtractorErrorDomain **Code=2** UserInfo={… SZExtractorFileOffsetErrorKey=4673799313 …}
+streaming_zip_conduit <Error>: Failed to finish extraction: … "Connection invalidated to streaming unzip service."
+```
+
+Causa: el IPA contiene una entrada **mayor de 4 GiB** y va en ZIP64 (versión 45 en el
+directorio central). El extractor en streaming de iOS 27 la rechaza; el corte llega justo
+al entrar en esa entrada. En Mario Kart 8 Deluxe es `Payload/DmIOS.app/romfs.img`
+(12.132.043.035 bytes) y el error cae en el byte 4.673.799.313, dentro de ella.
+
+Comprobarlo sin instalar (dice qué entrada hay en el offset del error y cuáles pasan de 4 GiB):
+
+```powershell
+python -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1]); t=4673799313; print([i.filename for i in z.infolist() if i.header_offset<=t][-1]); print([(i.filename,i.file_size) for i in z.infolist() if i.file_size>0xF0000000])" "ruta\Juego.ipa"
+```
+
+El **total** del IPA no importa: Cuphead (4,58 GB, 7.749 entradas, la mayor de 3,58 GB)
+se instala sin problema. Lo que rompe es una **entrada** de más de 4 GiB, y también un
+repack que escriba *todas* las entradas en ZIP64 (`force_zip64` en Python).
+
+Solución: que el RomFS no viaje dentro del IPA.
+
+- Build nuevo: `python win\build_ipa_windows.py "<Juego>" --romfs separate`. El IPA queda en
+  ~1 GB (app + `msl/`), y `romfs.img` se copia una vez a *Documentos*
+  (`ios fsync` o `ios file push`, ver [Copiar los datos del juego](INSTALAR-DESDE-PC.md#a2c-copiar-los-datos-del-juego-build-partida)).
+- IPA ya firmado, sin recompilar:
+  1. saca `Payload/DmIOS.app/romfs.img` de la app y guárdalo;
+  2. vuelve a firmar la app en el sitio: `plumesign sign --package <…\DmIOS.app> --apple-id`
+     (sin `-o`: con una `.app` firma en el sitio y no reempaqueta);
+  3. empaqueta el IPA **sin** `force_zip64` (todas las entradas quedan por debajo de 4 GiB;
+     el ZIP64 del índice final no molesta);
+  4. instala el IPA pequeño y copia `romfs.img` a *Documentos* de la app.
+
+`plumesign device --install` **no** sirve como alternativa: con el túnel de iOS 17+ no ve el
+dispositivo (`Error: Other error: Device ID … not found`).
 
 ## UnicodeEncodeError al imprimir el progreso
 
