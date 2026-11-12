@@ -1,14 +1,14 @@
 # CA-NINAPPLE — NXNative para Windows
 
-Build **nxnative** IPAs on a **Windows 10/11 PC, with no Mac**. Use your own legally dumped game files (NSP / XCI) and your own `prod.keys`. Pick them in a window, press **Build IPA**, and sideload the IPA to your iPhone or iPad.
+Compila IPAs de **nxnative** en un **PC con Windows 10/11, sin Mac**. Usa tus propios archivos de juego (NSP / XCI) y tus propias `prod.keys`. Elígelos en una ventana, pulsa **Build IPA** y lleva el IPA a tu iPhone o iPad.
 
-This repository is a fork of [zenvyzenshiro/NXNativeWindows](https://github.com/zenvyzenshiro/NXNativeWindows), itself a fork of [seedds/nxnative](https://github.com/seedds/nxnative). nxnative is not an emulator: the game's own arm64 code runs directly on the Apple chip, and the Switch graphics are rebuilt on Metal. Upstream builds IPAs only on a Mac with Xcode. The Windows fork adds a Windows build path in [`win/`](win/) and changes as little of upstream as it can. Nothing from any game is in this repository, and the project has no ties to Nintendo, Apple or any game publisher. Authorship, scope and what this copy adds: [NOTICE.md](NOTICE.md).
+Este repositorio es un fork de [zenvyzenshiro/NXNativeWindows](https://github.com/zenvyzenshiro/NXNativeWindows), que a su vez es un fork de [seedds/nxnative](https://github.com/seedds/nxnative). nxnative no es un emulador: el código arm64 del juego corre directamente en el chip de Apple y los gráficos de Switch se rehacen sobre Metal. Upstream solo compila IPAs en un Mac con Xcode; el fork de Windows añade una ruta de compilación en Windows ([`win/`](win/)) y cambia lo mínimo de upstream. Aquí no hay ningún juego, ni llaves, ni SDK de Apple. Autoría, alcance y qué añade esta copia: [NOTICE.md](NOTICE.md).
 
-> Panduan langkah demi langkah dalam Bahasa Indonesia: [win/TUTORIAL.md](win/TUTORIAL.md).
-> On Linux the same build runs with native tools and Apple's Metal compiler under Wine: [win/LINUX.md](win/LINUX.md).
-> Upstream's own README (games gallery, Mac packing, playing) is kept as [README.nxnative.md](README.nxnative.md).
+> Guía paso a paso en indonesio: [win/TUTORIAL.md](win/TUTORIAL.md).
+> En Linux la misma compilación funciona con herramientas nativas y el compilador de Metal de Apple bajo Wine: [win/LINUX.md](win/LINUX.md).
+> El README de upstream (galería de juegos, empaquetado en Mac, cómo jugar) está en [README.nxnative.md](README.nxnative.md).
 
-## Empieza aquí (español)
+## Empieza aquí
 
 CA-NINAPPLE es esta distribución: el mismo NXNative for Windows, con las guías en español y
 los arreglos de esta copia. Compilas en tu PC el IPA de **tus propios** juegos y lo instalas
@@ -72,20 +72,10 @@ en [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md).
 Con un Apple ID gratis **cada app instalada caduca a los 7 días** y hay un máximo de **3 apps**
 con perfil gratuito en cada dispositivo: desinstalar una borra también sus partidas.
 
-### Cuánto tarda
-
-Medido en un Ryzen 5 5600G (6 núcleos / 12 hilos). La etapa lenta es el compilador de Metal
-de Apple, que es de CPU y no usa la GPU:
-
-| Juego | Shaders | Primera compilación | Después |
-|---|---|---|---|
-| BALL x PIT | 22.319 (6.584 textos distintos) | ~25 min | minutos |
-| The Legend of Zelda: Tears of the Kingdom | 28.669 | ~35 min (estimado) | minutos |
-| Pokémon Pokopia (Switch 2) | 131.382 | **~1 h de traducción + ~10 h de compilación** | — |
-
-Cómo se reparte el tiempo, qué palancas aceleran y cuáles no sirven (compartir caché entre
-juegos, `-O0`, más trabajadores, la GPU) está medido en
-**[Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md)**.
+La primera compilación de un juego grande se pasa horas (el compilador de Metal de Apple es
+de CPU y no tiene atajo por GPU). Los tiempos medidos y lo que sí acelera están en
+[Cuánto tarda una compilación](#cuánto-tarda-una-compilación) y en la guía
+[Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md).
 
 ### Guías
 
@@ -101,74 +91,84 @@ juegos, `-O0`, más trabajadores, la GPU) está medido en
 | [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]`, builds partidos con XCI |
 | [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
 
-El resto de este documento es el manual técnico del fork de Windows, en inglés.
+El resto del documento es el manual técnico del fork de Windows. Los documentos que vienen
+de upstream ([`docs/development.md`](docs/development.md), [`docs/agents`](docs/agents/README.md),
+[`dm/`](dm/)) siguen en inglés.
 
 <p align="center">
-  <img src="docs/images/windows/gui-start.png" width="32%" alt="The builder window, before picking files">
-  <img src="docs/images/windows/gui-building.png" width="32%" alt="A build in progress: the button is the progress bar">
-  <img src="docs/images/windows/gui-done.png" width="32%" alt="A finished build with its IPA">
+  <img src="docs/images/windows/gui-start.png" width="32%" alt="La ventana del builder, antes de elegir los archivos">
+  <img src="docs/images/windows/gui-building.png" width="32%" alt="Una compilación en curso: el botón es la barra de progreso">
+  <img src="docs/images/windows/gui-done.png" width="32%" alt="Una compilación terminada, con su IPA">
 </p>
 
-## Contents
+## Índice
 
-- [Status](#status)
-- [Games on NXNative for Windows](#games-on-nxnative-for-windows)
-- [Upstream NXNative games](#upstream-nxnative-games)
-- [What you need](#what-you-need)
-- [One-time setup](#one-time-setup)
-- [Build an IPA with the window](#build-an-ipa-with-the-window)
-- [Build an IPA from a terminal](#build-an-ipa-from-a-terminal)
-- [Split builds (small IPA + data folder)](#split-builds-small-ipa--data-folder)
-- [Install the IPA on your iPhone or iPad](#install-the-ipa-on-your-iphone-or-ipad)
-- [The launcher on the device](#the-launcher-on-the-device)
-- [How long a build takes](#how-long-a-build-takes)
-- [Speeding up the shader build](#speeding-up-the-shader-build)
-- [How the Windows build works](#how-the-windows-build-works)
-- [Which games build on Windows](#which-games-build-on-windows)
-- [Switch 2 games](#switch-2-games)
-- [Building on Linux](#building-on-linux)
-- [Troubleshooting](#troubleshooting)
-- [Differences from upstream](#differences-from-upstream)
-- [Repository layout](#repository-layout)
-- [Updating from upstream](#updating-from-upstream)
-- [Credits and license](#credits-and-license)
-- [Legal notice](#legal-notice)
+- [Estado](#estado)
+- [Juegos compilados en Windows](#juegos-compilados-en-windows)
+- [Juegos de upstream](#juegos-de-upstream)
+- [Qué necesitas](#qué-necesitas)
+- [Preparación inicial](#preparación-inicial)
+- [Compilar un IPA con la ventana](#compilar-un-ipa-con-la-ventana)
+- [Compilar un IPA desde la terminal](#compilar-un-ipa-desde-la-terminal)
+- [Compilación partida: IPA pequeño y carpeta de datos](#compilación-partida-ipa-pequeño-y-carpeta-de-datos)
+- [Instalar el IPA en el iPhone o el iPad](#instalar-el-ipa-en-el-iphone-o-el-ipad)
+- [El launcher en el dispositivo](#el-launcher-en-el-dispositivo)
+- [Cuánto tarda una compilación](#cuánto-tarda-una-compilación)
+- [Acelerar la compilación de shaders](#acelerar-la-compilación-de-shaders)
+- [Cómo funciona la compilación en Windows](#cómo-funciona-la-compilación-en-windows)
+- [Qué juegos compilan en Windows](#qué-juegos-compilan-en-windows)
+- [Juegos de Switch 2](#juegos-de-switch-2)
+- [Compilar en Linux](#compilar-en-linux)
+- [Problemas](#problemas)
+- [Diferencias con upstream](#diferencias-con-upstream)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Actualizar desde upstream](#actualizar-desde-upstream)
+- [Créditos y licencia](#créditos-y-licencia)
+- [Aviso legal](#aviso-legal)
 
-## Status
+## Estado
 
-NXNative for Windows builds the same kind of IPA as upstream NXNative, from a Windows PC. The games below are the ones **built with this fork and run on a real device** by its author (an iPad with an Apple A16 GPU, iPadOS 27, signed with SideStore). Upstream's own list of tested games follows in [Upstream NXNative games](#upstream-nxnative-games).
+NXNative for Windows compila el mismo tipo de IPA que el NXNative de upstream, desde un PC
+con Windows. Los juegos de la tabla siguiente son los que **su autor compiló con este fork y
+probó en un dispositivo real** (un iPad con GPU A16, iPadOS 27, firmado con SideStore). La
+lista de juegos probados por upstream viene después, en [Juegos de upstream](#juegos-de-upstream).
 
-This copy's own builds, on an iPhone with the Windows path: Cuphead, Mario Kart 8 Deluxe, The Legend of Zelda: Tears of the Kingdom, Pokémon: Let's Go, Pikachu! and Hollow Knight: Silksong, the last one with the Switch 2 engine ([docs/ca-ninapple/NX2APPLE-SWITCH2.md](docs/ca-ninapple/NX2APPLE-SWITCH2.md)). Pokémon Pokopia (Switch 2) was compiled to 22 % of its Metal stage and then abandoned; its measurements are in [docs/ca-ninapple/COMPILAR-RAPIDO.md](docs/ca-ninapple/COMPILAR-RAPIDO.md).
+Las compilaciones propias de esta copia, en un iPhone y con la ruta de Windows: Cuphead,
+Mario Kart 8 Deluxe, The Legend of Zelda: Tears of the Kingdom, Pokémon: Let's Go, Pikachu! y
+Hollow Knight: Silksong, este último con el motor de Switch 2
+([docs/ca-ninapple/NX2APPLE-SWITCH2.md](docs/ca-ninapple/NX2APPLE-SWITCH2.md)). Pokémon
+Pokopia (Switch 2) se compiló hasta el 22 % de su etapa de Metal y luego se abandonó; sus
+mediciones están en [docs/ca-ninapple/COMPILAR-RAPIDO.md](docs/ca-ninapple/COMPILAR-RAPIDO.md).
 
-## Games on NXNative for Windows
+## Juegos compilados en Windows
 
-| Game | Version | Built on Windows | On the iPad (A16, 6 GB) | Notes |
+| Juego | Versión | Compilado en Windows | En el iPad (A16, 6 GB) | Notas |
 |---|---|---|---|---|
-| **Hollow Knight: Silksong** | 1.0.30000 | yes: the Switch 2 engine (NVN2 / Ampere); the 6.29 GB of game data go to *Documents* as `romfs.img` | not tested | On an iPhone: the launcher shows the game and *Play*, the log names the game file and the shader libraries, and the app asks for Increased Memory Limit |
-| **Pokémon Pokopia** (Switch 2) | 2.0.1 | yes, up to 22 % of the Metal stage; then abandoned | — | 131,382 shaders: ~1 h of translation and ~10 h of Metal compile on a 12-thread PC. The sources and the cache were deleted, so it starts from zero again |
-| **The Legend of Zelda: Tears of the Kingdom** | 1.4.3 | yes: split build, 28,669 shaders, 39 MB app + 17 GB data | **plays**, saves load | With Increased Memory Limit on: 3.7 GB, no closes. Render scale 60 % + MetalFX + Handheld: GPU about 10 ms a frame, mostly 60 fps; drops in fights (CPU). BC textures decoded for the A16. |
-| **Balatro** | 1.0 (v0) | yes: LÖVE shaders rebuilt offline from the game's Lua | **plays** | |
-| **Mario vs. Donkey Kong** | 1.0.0 (v0) | yes | runs | slow on the A16; not tuned yet |
-| **OCTOPATH TRAVELER 0** | 1.0.1 (v0) | yes: 10,596 Oodle-compressed Unreal shaders decoded by the game's own Oodle in an emulated ARM64 machine; the allocator cut and 60 fps addresses ported to v0 | not yet confirmed | 3.2 GB IPA |
-| **Megabyte Punch** | 1.0 | yes (no upstream profile: a provisional one) | under test | SDK 8.3.1 address-region fix found automatically |
-| **Portal** | 1.0.3 | yes, with one run-time shader capture on the device | not yet confirmed | 8 of its 10 run-time shaders are already made on the PC by the game's own GLSLC in an emulated ARM64 machine; the rest needs the capture IPA |
+| **Hollow Knight: Silksong** | 1.0.30000 | sí: el motor de Switch 2 (NVN2 / Ampere); los 6,29 GB de datos del juego van a *Documents* como `romfs.img` | sin probar | En un iPhone: el launcher muestra el juego y *Play*, el log nombra el archivo del juego y las librerías de shaders, y la app pide Increased Memory Limit |
+| **Pokémon Pokopia** (Switch 2) | 2.0.1 | sí, hasta el 22 % de la etapa de Metal; luego abandonado | — | 131.382 shaders: ~1 h de traducción y ~10 h de compilación con Metal en un PC de 12 hilos. Los fuentes y la caché se borraron, así que vuelve a empezar de cero |
+| **The Legend of Zelda: Tears of the Kingdom** | 1.4.3 | sí: compilación partida, 28.669 shaders, app de 39 MB + 17 GB de datos | **juega**, las partidas cargan | Con Increased Memory Limit activado: 3,7 GB, sin cierres. Escala de render 60 % + MetalFX + Handheld: GPU ~10 ms por fotograma, sobre todo 60 fps; baja en las luchas (CPU). Texturas BC decodificadas para el A16. |
+| **Balatro** | 1.0 (v0) | sí: shaders de LÖVE reconstruidos fuera de línea desde el Lua del juego | **juega** | |
+| **Mario vs. Donkey Kong** | 1.0.0 (v0) | sí | corre | lento en el A16; sin ajustar todavía |
+| **OCTOPATH TRAVELER 0** | 1.0.1 (v0) | sí: 10.596 shaders de Unreal comprimidos con Oodle, decodificados por el Oodle del propio juego en una máquina ARM64 emulada; el corte del asignador y las direcciones de 60 fps llevados a v0 | sin confirmar todavía | IPA de 3,2 GB |
+| **Megabyte Punch** | 1.0 | sí (sin perfil de upstream: uno provisional) | en pruebas | El arreglo de regiones de direcciones del SDK 8.3.1 se encontró solo |
+| **Portal** | 1.0.3 | sí, con una captura de shaders en el dispositivo | sin confirmar todavía | 8 de sus 10 shaders de ejecución ya los hace el PC con el GLSLC del propio juego en una máquina ARM64 emulada; el resto necesita el IPA de captura |
 
-What this fork adds on top of upstream, for every game:
+Lo que este fork añade a upstream, para todos los juegos:
 
 | | |
 |---|---|
-| **No Mac** | Metal Developer Tools for Windows, LLVM (clang, ld64.lld) and the iPhoneOS SDK from `Xcode.xip`; upstream's Mac-host steps replaced (LÖVE shaders offline, Oodle / Unreal / LZ5 and GLSLC in an emulated ARM64 machine, run-time captures on the device). |
-| **A16 and older GPUs** | BC1–BC7 textures transcoded at upload (`dm/gfx/tex/bc_soft.c`): BC1 / BC2 / BC3 / BC7 into ASTC 4x4 (a quarter of RGBA8's memory; BC1 keeps its palette exactly), unsigned BC6H into RG11B10F, BC4 / BC5 into R8 / RG8. Upstream's IPAs close on these GPUs with `MTLTextureDescriptor has invalid pixelFormat`. `DM_BC_ASTC=0` goes back to uncompressed formats. |
-| **Small IPAs** | Split builds: the app alone (tens of MB) plus a data folder or ZIP the app imports itself, with a progress bar, in the background with a Live Activity on iOS 26+. |
-| **Memory** | The app asks for Increased Memory Limit in its own signature, so SideStore keeps it when the App ID allows it; a texture memory saver frees the textures' second copy (automatic when memory runs low); a HUD shows fps, GPU time and the memory left. A memory guard in every game caps the frame rate at 30 under 600 MB left and flushes caches under 300 MB (`DM_MEM_GUARD=0` turns it off; the HUD shows `GUARD`). On 6 GB devices, Metal 4 pipelines and the pipeline prebuild are off by default, and the device's own pipeline list is not prewarmed before the first frame, so there is no long "Preparing" screen. |
-| **Launcher** | Upstream's single-screen launcher in UIKit, with memory-light defaults on 6 GB devices and Tile memory optimizations as an experiment. |
-| **Mods** | Emulator-layout mods (`exefs` IPS / pchtxt, `romfs`) from a `mods` folder, applied as rewriter cuts after a build-ID check. |
-| **TV output** | Every game fills an AirPlay or HDMI display at 16:9 through an iOS 27 scene accessory (`UISceneAccessory`, `dm/ios/Sources/front_ios.m`), on by default; the iPhone keeps the pad and the fps counter (`DM_TV_OUT=0` turns it off). Spanish guide: [docs/ca-ninapple/TV-AIRPLAY.md](docs/ca-ninapple/TV-AIRPLAY.md). |
-| **Window** | A builder window (black and pink) besides the command line. |
+| **Sin Mac** | Metal Developer Tools para Windows, LLVM (clang, ld64.lld) y el SDK de iPhoneOS de `Xcode.xip`; los pasos que upstream hace en un Mac se sustituyen (shaders de LÖVE fuera de línea, Oodle / Unreal / LZ5 y GLSLC en una máquina ARM64 emulada, capturas en el dispositivo). |
+| **GPU A16 y anteriores** | Texturas BC1–BC7 transcodificadas al subir (`dm/gfx/tex/bc_soft.c`): BC1 / BC2 / BC3 / BC7 a ASTC 4x4 (la cuarta parte de la memoria de RGBA8; BC1 conserva su paleta exacta), BC6H sin signo a RG11B10F, BC4 / BC5 a R8 / RG8. Los IPA de upstream se cierran en estos GPU con `MTLTextureDescriptor has invalid pixelFormat`. `DM_BC_ASTC=0` vuelve a los formatos sin comprimir. |
+| **IPA pequeños** | Compilación partida: solo la app (decenas de MB) más una carpeta de datos o un ZIP que la propia app importa, con barra de progreso, en segundo plano y con una Live Activity en iOS 26+. |
+| **Memoria** | La app pide Increased Memory Limit en su propia firma, así que SideStore lo conserva cuando el App ID lo permite; un ahorrador de memoria de texturas libera la segunda copia de las texturas (automático cuando queda poca memoria); un HUD muestra los fps, el tiempo de GPU y la memoria libre. Un guardián de memoria en cada juego limita los fotogramas a 30 por debajo de 600 MB libres y vacía cachés por debajo de 300 MB (`DM_MEM_GUARD=0` lo desactiva; el HUD muestra `GUARD`). En dispositivos de 6 GB, las pipelines de Metal 4 y la precompilación de pipelines están desactivadas por defecto, y la lista de pipelines del propio dispositivo no se precalienta antes del primer fotograma, así que no hay una pantalla larga de "Preparing". |
+| **Launcher** | El launcher de una sola pantalla de upstream, en UIKit, con valores por defecto ligeros en memoria para dispositivos de 6 GB y optimizaciones de memoria de tiles como experimento. |
+| **Mods** | Mods con la disposición de un emulador (`exefs` IPS / pchtxt, `romfs`) desde una carpeta `mods`, aplicados como cortes del rewriter tras comprobar el build ID. |
+| **Salida a TV** | Cada juego llena una pantalla AirPlay o HDMI a 16:9 con un accesorio de escena de iOS 27 (`UISceneAccessory`, `dm/ios/Sources/front_ios.m`), activado por defecto; el iPhone queda con el mando y el contador de fps (`DM_TV_OUT=0` lo desactiva). Guía en español: [docs/ca-ninapple/TV-AIRPLAY.md](docs/ca-ninapple/TV-AIRPLAY.md). |
+| **Ventana** | Una ventana de compilación (negra y rosa) además de la línea de órdenes. |
 
-The PC this was built and tested on:
+El PC en el que se compiló y se probó:
 
-| Tool | Version |
+| Herramienta | Versión |
 |---|---|
 | Windows | 11 Pro (x64) |
 | Python | 3.15 |
@@ -177,136 +177,196 @@ The PC this was built and tested on:
 | Vulkan SDK (spirv-cross, glslangValidator) | 1.4.363.0 |
 | zstd | 1.5.7 |
 | Metal Developer Tools for Windows | 6.2 (`Apple metal version 32023.850`) |
-| iPhoneOS SDK | 27.1, from `Xcode_27.1.xip` |
+| SDK de iPhoneOS | 27.1, del `Xcode_27.1.xip` |
 
-## Upstream NXNative games
+## Juegos de upstream
 
-These are **upstream's** tested games (on a Mac or an iPhone with upstream NXNative), not a list of games verified with this fork: most build the same way here, and [Which games build on Windows](#which-games-build-on-windows) lists those that need an extra step (no game needs a Mac). Upstream's 65 tested games, each with its IPA size. A note under a game is upstream's, for example "60 fps with 1.2.0" where the game runs at 60 fps with that update. The [per-game notes](dm/games/README.md#games) give each game's tested version, platforms and known issues.
+Estos son los juegos probados por **upstream** (en un Mac o en un iPhone con el NXNative de
+upstream), no una lista de juegos verificados con este fork: la mayoría compila igual aquí, y
+[Qué juegos compilan en Windows](#qué-juegos-compilan-en-windows) recoge los que necesitan
+un paso extra (ningún juego necesita un Mac). Los 91 juegos de la galería de upstream, cada
+uno con el tamaño de su IPA. Las notas de un juego son de upstream, por ejemplo "60 fps con
+1.2.0" cuando el juego corre a 60 fps con esa actualización. Las
+[notas por juego](dm/games/README.md#games) dan la versión probada de cada juego, sus
+plataformas y sus problemas conocidos.
 
+<!-- gallery: written by dm/tools/docs_gallery.py from docs/images/gallery.tsv; change the table, then run it -->
 <table>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/mario-kart-8-deluxe.jpg" width="256" alt="Mario Kart 8 Deluxe"><br>Mario Kart 8 Deluxe<br><sub>~11.9 GB · no Mii heads</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/mario-vs-donkey-kong.jpg" width="256" alt="Mario vs. Donkey Kong"><br>Mario vs. Donkey Kong<br><sub>~1.6 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/paper-mario-the-thousand-year-door.jpg" width="256" alt="Paper Mario: The Thousand-Year Door"><br>Paper Mario: The Thousand-Year Door<br><sub>~5 GB · 60 fps with 1.0.1</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/mario-kart-8-deluxe.jpg" width="256" alt="Mario Kart 8 Deluxe"><br><sub><b>Mario Kart 8 Deluxe</b><br>~11.9 GB · sin cabezas Mii</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/mario-vs-donkey-kong.jpg" width="256" alt="Mario vs. Donkey Kong"><br><sub><b>Mario vs. Donkey Kong</b><br>~1.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/paper-mario-the-thousand-year-door.jpg" width="256" alt="Paper Mario: The Thousand-Year Door"><br><sub><b>Paper Mario: The Thousand-Year Door</b><br>~5 GB · 60 fps con 1.0.1</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-3d-world.jpg" width="256" alt="Super Mario 3D World + Bowser's Fury"><br>Super Mario 3D World + Bowser's Fury<br><sub>~3 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-bros-wonder.jpg" width="256" alt="Super Mario Bros. Wonder"><br>Super Mario Bros. Wonder<br><sub>~4 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-galaxy.jpg" width="256" alt="Super Mario Galaxy"><br>Super Mario Galaxy<br><sub>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-3d-world.jpg" width="256" alt="Super Mario 3D World + Bowser's Fury"><br><sub><b>Super Mario 3D World + Bowser's Fury</b><br>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-bros-wonder.jpg" width="256" alt="Super Mario Bros. Wonder"><br><sub><b>Super Mario Bros. Wonder</b><br>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-galaxy.jpg" width="256" alt="Super Mario Galaxy"><br><sub><b>Super Mario Galaxy</b><br>~3 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-galaxy-2.jpg" width="256" alt="Super Mario Galaxy 2"><br>Super Mario Galaxy 2<br><sub>~3 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-odyssey.jpg" width="256" alt="Super Mario Odyssey"><br>Super Mario Odyssey<br><sub>~6 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/zelda-breath-of-the-wild.jpg" width="256" alt="The Legend of Zelda: Breath of the Wild"><br>The Legend of Zelda: Breath of the Wild<br><sub>~16 GB · 60 fps with 1.9.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-galaxy-2.jpg" width="256" alt="Super Mario Galaxy 2"><br><sub><b>Super Mario Galaxy 2</b><br>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-odyssey.jpg" width="256" alt="Super Mario Odyssey"><br><sub><b>Super Mario Odyssey</b><br>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-breath-of-the-wild.jpg" width="256" alt="The Legend of Zelda: Breath of the Wild"><br><sub><b>The Legend of Zelda: Breath of the Wild</b><br>~16 GB · 60 fps con 1.9.0</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/zelda-links-awakening.jpg" width="256" alt="The Legend of Zelda: Link's Awakening"><br>The Legend of Zelda: Link's Awakening<br><sub>~6 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/zelda-tears-of-the-kingdom.jpg" width="256" alt="The Legend of Zelda: Tears of the Kingdom"><br>The Legend of Zelda: Tears of the Kingdom<br><sub>~17 GB · 60 fps with 1.4.3</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/13-sentinels.jpg" width="256" alt="13 Sentinels: Aegis Rim"><br>13 Sentinels: Aegis Rim<br><sub>~5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-links-awakening.jpg" width="256" alt="The Legend of Zelda: Link's Awakening"><br><sub><b>The Legend of Zelda: Link's Awakening</b><br>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-tears-of-the-kingdom.jpg" width="256" alt="The Legend of Zelda: Tears of the Kingdom"><br><sub><b>The Legend of Zelda: Tears of the Kingdom</b><br>~17 GB · 60 fps con 1.4.3</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/13-sentinels.jpg" width="256" alt="13 Sentinels: Aegis Rim"><br><sub><b>13 Sentinels: Aegis Rim</b><br>~5 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/absolum.jpg" width="256" alt="Absolum"><br>Absolum<br><sub>~2 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/ace-attorney-investigations.jpg" width="256" alt="Ace Attorney Investigations Collection"><br>Ace Attorney Investigations Collection<br><sub>~7 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/advance-wars-1-2-re-boot-camp.jpg" width="256" alt="Advance Wars 1+2: Re-Boot Camp"><br>Advance Wars 1+2: Re-Boot Camp<br><sub>~7.1 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/absolum.jpg" width="256" alt="Absolum"><br><sub><b>Absolum</b><br>~2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/ace-attorney-investigations.jpg" width="256" alt="Ace Attorney Investigations Collection"><br><sub><b>Ace Attorney Investigations Collection</b><br>~7 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/advance-wars-1-2-re-boot-camp.jpg" width="256" alt="Advance Wars 1+2: Re-Boot Camp"><br><sub><b>Advance Wars 1+2: Re-Boot Camp</b><br>~7.1 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/ai-the-somnium-files.jpg" width="256" alt="AI: THE SOMNIUM FILES"><br>AI: THE SOMNIUM FILES<br><sub>~8.3 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/ai-the-somnium-files-nirvana-initiative.jpg" width="256" alt="AI: THE SOMNIUM FILES - nirvanA Initiative"><br>AI: THE SOMNIUM FILES - nirvanA Initiative<br><sub>~11.6 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/animal-crossing-new-horizons.jpg" width="256" alt="Animal Crossing: New Horizons"><br>Animal Crossing: New Horizons<br><sub>~10.5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/ai-the-somnium-files.jpg" width="256" alt="AI: THE SOMNIUM FILES"><br><sub><b>AI: THE SOMNIUM FILES</b><br>~8.3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/ai-the-somnium-files-nirvana-initiative.jpg" width="256" alt="AI: THE SOMNIUM FILES - nirvanA Initiative"><br><sub><b>AI: THE SOMNIUM FILES - nirvanA Initiative</b><br>~11.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/animal-crossing-new-horizons.jpg" width="256" alt="Animal Crossing: New Horizons"><br><sub><b>Animal Crossing: New Horizons</b><br>~10.5 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/animal-well.png" width="256" alt="ANIMAL WELL"><br>ANIMAL WELL<br><sub>~54 MB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/astral-chain.png" width="256" alt="ASTRAL CHAIN"><br><a href="dm/games/01007300020FA000/README.md">ASTRAL CHAIN</a><br><sub>~9.7 GB · 60 fps target with 1.0.1</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/balatro.jpg" width="256" alt="Balatro"><br>Balatro<br><sub>~82 MB · played by touch</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/animal-well.png" width="256" alt="ANIMAL WELL"><br><sub><b>ANIMAL WELL</b><br>~54 MB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/astral-chain.png" width="256" alt="ASTRAL CHAIN"><br><sub><b><a href="dm/games/01007300020FA000/README.md">ASTRAL CHAIN</a></b><br>~9.7 GB · 60 fps como objetivo con 1.0.1</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/balatro.jpg" width="256" alt="Balatro"><br><sub><b>Balatro</b><br>~82 MB · jugado con el dedo</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/ball-x-pit.jpg" width="256" alt="BALL x PIT"><br>BALL x PIT<br><sub>~1.1 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta.jpg" width="256" alt="Bayonetta"><br>Bayonetta<br><sub>~8.8 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta-2.jpg" width="256" alt="Bayonetta 2"><br>Bayonetta 2<br><sub>~12.5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/ball-x-pit.jpg" width="256" alt="BALL x PIT"><br><sub><b>BALL x PIT</b><br>~1.1 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta.jpg" width="256" alt="Bayonetta"><br><sub><b>Bayonetta</b><br>~8.8 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta-2.jpg" width="256" alt="Bayonetta 2"><br><sub><b>Bayonetta 2</b><br>~12.5 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta-3.jpg" width="256" alt="Bayonetta 3"><br>Bayonetta 3<br><sub>~14.2 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/big-brain-academy-brain-vs-brain.jpg" width="256" alt="Big Brain Academy: Brain vs. Brain"><br>Big Brain Academy: Brain vs. Brain<br><sub>~0.8 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/brain-memory-training-academy.jpg" width="256" alt="Brain Memory Training Academy"><br>Brain Memory Training Academy<br><sub>~0.1 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/bayonetta-3.jpg" width="256" alt="Bayonetta 3"><br><sub><b>Bayonetta 3</b><br>~14.2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/big-brain-academy-brain-vs-brain.jpg" width="256" alt="Big Brain Academy: Brain vs. Brain"><br><sub><b>Big Brain Academy: Brain vs. Brain</b><br>~0.8 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/brain-memory-training-academy.jpg" width="256" alt="Brain Memory Training Academy"><br><sub><b>Brain Memory Training Academy</b><br>~0.1 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/captain-toad-treasure-tracker.jpg" width="256" alt="Captain Toad: Treasure Tracker"><br>Captain Toad: Treasure Tracker<br><sub>~2 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/catherine-full-body.jpg" width="256" alt="Catherine: Full Body"><br>Catherine: Full Body<br><sub>~14 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/celeste.jpg" width="256" alt="Celeste"><br>Celeste<br><sub>~0.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/captain-toad-treasure-tracker.jpg" width="256" alt="Captain Toad: Treasure Tracker"><br><sub><b>Captain Toad: Treasure Tracker</b><br>~2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/catherine-full-body.jpg" width="256" alt="Catherine: Full Body"><br><sub><b>Catherine: Full Body</b><br>~14 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/celeste.jpg" width="256" alt="Celeste"><br><sub><b>Celeste</b><br>~0.9 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/cuphead.jpg" width="256" alt="Cuphead"><br>Cuphead<br><sub>~5 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/dark-souls-remastered-creation.jpg" width="256" alt="DARK SOULS: REMASTERED"><br>DARK SOULS: REMASTERED<br><sub>~4 GB · 60 fps with 1.0.3</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/digimon-story-cyber-sleuth.jpg" width="256" alt="Digimon Story Cyber Sleuth: Complete Edition"><br>Digimon Story Cyber Sleuth: Complete Edition<br><sub>~5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/cuphead.jpg" width="256" alt="Cuphead"><br><sub><b>Cuphead</b><br>~5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/dark-souls-remastered-creation.jpg" width="256" alt="DARK SOULS: REMASTERED"><br><sub><b>DARK SOULS: REMASTERED</b><br>~4 GB · 60 fps con 1.0.3</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/digimon-story-cyber-sleuth.jpg" width="256" alt="Digimon Story Cyber Sleuth: Complete Edition"><br><sub><b>Digimon Story Cyber Sleuth: Complete Edition</b><br>~5 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/dragon-quest-vii-reimagined.jpg" width="256" alt="DRAGON QUEST VII Reimagined"><br>DRAGON QUEST VII Reimagined<br><sub>~5.9 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/dragon-quest-xi-s.jpg" width="256" alt="DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition"><br>DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition<br><sub>~15 GB · 60 fps with 1.0.4</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-resonance.jpg" width="256" alt="FINAL FANTASY RESONANCE"><br>FINAL FANTASY RESONANCE<br><sub>~10 GB · 60 fps with 1.0.1</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/donkey-kong-country-tropical-freeze.jpg" width="256" alt="Donkey Kong Country: Tropical Freeze"><br><sub><b>Donkey Kong Country: Tropical Freeze</b><br>~7.3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/dragon-quest-vii-reimagined.jpg" width="256" alt="DRAGON QUEST VII Reimagined"><br><sub><b>DRAGON QUEST VII Reimagined</b><br>~5.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/dragon-quest-xi-s.jpg" width="256" alt="DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition"><br><sub><b>DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition</b><br>~15 GB · 60 fps con 1.0.4</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-tactics.jpg" width="256" alt="FINAL FANTASY TACTICS - The Ivalice Chronicles"><br>FINAL FANTASY TACTICS - The Ivalice Chronicles<br><sub>~11 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/fire-emblem-engage.jpg" width="256" alt="Fire Emblem Engage"><br>Fire Emblem Engage<br><sub>~15 GB · 60 fps with 2.0.0</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/fire-emblem-three-houses.jpg" width="256" alt="Fire Emblem: Three Houses"><br>Fire Emblem: Three Houses<br><sub>~13 GB · 60 fps with 1.2.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-resonance.jpg" width="256" alt="FINAL FANTASY RESONANCE"><br><sub><b>FINAL FANTASY RESONANCE</b><br>~10 GB · 60 fps con 1.0.1</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-tactics.jpg" width="256" alt="FINAL FANTASY TACTICS - The Ivalice Chronicles"><br><sub><b>FINAL FANTASY TACTICS - The Ivalice Chronicles</b><br>~11 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/fire-emblem-engage.jpg" width="256" alt="Fire Emblem Engage"><br><sub><b>Fire Emblem Engage</b><br>~15 GB · 60 fps con 2.0.0</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/ghost-trick-phantom-detective.jpg" width="256" alt="Ghost Trick: Phantom Detective"><br>Ghost Trick: Phantom Detective<br><sub>~3 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/the-great-ace-attorney-chronicles.jpg" width="256" alt="The Great Ace Attorney Chronicles"><br>The Great Ace Attorney Chronicles<br><sub>~4 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/hades.jpg" width="256" alt="Hades"><br>Hades<br><sub>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/fire-emblem-three-houses.jpg" width="256" alt="Fire Emblem: Three Houses"><br><sub><b>Fire Emblem: Three Houses</b><br>~13 GB · 60 fps con 1.2.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/ghost-trick-phantom-detective.jpg" width="256" alt="Ghost Trick: Phantom Detective"><br><sub><b>Ghost Trick: Phantom Detective</b><br>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/the-great-ace-attorney-chronicles.jpg" width="256" alt="The Great Ace Attorney Chronicles"><br><sub><b>The Great Ace Attorney Chronicles</b><br>~4 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/hades-ii.jpg" width="256" alt="Hades II"><br>Hades II<br><sub>~4 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/hollow-knight-silksong.jpg" width="256" alt="Hollow Knight: Silksong"><br>Hollow Knight: Silksong<br><sub>~6.4 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/hyrule-warriors-age-of-calamity.jpg" width="256" alt="Hyrule Warriors: Age of Calamity"><br>Hyrule Warriors: Age of Calamity<br><sub>~15 GB · 60 fps with 1.3.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/hades.jpg" width="256" alt="Hades"><br><sub><b>Hades</b><br>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/hades-ii.jpg" width="256" alt="Hades II"><br><sub><b>Hades II</b><br>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/hollow-knight-silksong.jpg" width="256" alt="Hollow Knight: Silksong"><br><sub><b>Hollow Knight: Silksong</b><br>~6.4 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/luigis-mansion-3.jpg" width="256" alt="Luigi's Mansion 3"><br>Luigi's Mansion 3<br><sub>~7.5 GB · 60 fps with 1.4.0</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/metroid-dread.jpg" width="256" alt="Metroid Dread"><br>Metroid Dread<br><sub>~5 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/monster-hunter-rise.jpg" width="256" alt="Monster Hunter Rise"><br>Monster Hunter Rise<br><sub>~22 GB · 60 fps with 16.0.2</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/hyrule-warriors-age-of-calamity.jpg" width="256" alt="Hyrule Warriors: Age of Calamity"><br><sub><b>Hyrule Warriors: Age of Calamity</b><br>~15 GB · 60 fps con 1.3.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/kirby-and-the-forgotten-land.jpg" width="256" alt="Kirby and the Forgotten Land"><br><sub><b>Kirby and the Forgotten Land</b><br>~6.4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/luigis-mansion-3.jpg" width="256" alt="Luigi's Mansion 3"><br><sub><b>Luigi's Mansion 3</b><br>~7.5 GB · 60 fps con 1.4.0</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/monster-train-2.jpg" width="256" alt="Monster Train 2"><br>Monster Train 2<br><sub>~1.6 GB · 60 fps with 1.1.1</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/octopath-traveler-0.jpg" width="256" alt="Octopath Traveler 0"><br>Octopath Traveler 0<br><sub>~4 GB · 60 fps with 1.0.5</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/octopath-traveler-ii.jpg" width="256" alt="Octopath Traveler II"><br>Octopath Traveler II<br><sub>~5.9 GB · 60 fps with 1.1.1</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/metroid-dread.jpg" width="256" alt="Metroid Dread"><br><sub><b>Metroid Dread</b><br>~5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/monster-hunter-rise.jpg" width="256" alt="Monster Hunter Rise"><br><sub><b>Monster Hunter Rise</b><br>~22 GB · 60 fps con 16.0.2</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/monster-train-2.jpg" width="256" alt="Monster Train 2"><br><sub><b>Monster Train 2</b><br>~1.6 GB · 60 fps con 1.1.1</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/patricks-parabox.jpg" width="256" alt="Patrick's Parabox"><br>Patrick's Parabox<br><sub>~0.2 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/persona-5-royal.jpg" width="256" alt="Persona 5 Royal"><br>Persona 5 Royal<br><sub>~14.9 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/pikmin-4.jpg" width="256" alt="Pikmin 4"><br>Pikmin 4<br><sub>~10.8 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/octopath-traveler.jpg" width="256" alt="OCTOPATH TRAVELER"><br><sub><b>OCTOPATH TRAVELER</b><br>~3.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/octopath-traveler-0.jpg" width="256" alt="Octopath Traveler 0"><br><sub><b>Octopath Traveler 0</b><br>~4 GB · 60 fps con 1.0.5</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/octopath-traveler-ii.jpg" width="256" alt="Octopath Traveler II"><br><sub><b>Octopath Traveler II</b><br>~5.9 GB · 60 fps con 1.1.1</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-legends-z-a.jpg" width="256" alt="Pokémon Legends: Z-A"><br>Pokémon Legends: Z-A<br><sub>~6 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-sword.jpg" width="256" alt="Pokémon Sword"><br>Pokémon Sword<br><sub>~12.4 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/portal.jpg" width="256" alt="Portal"><br>Portal<br><sub>~2.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/patricks-parabox.jpg" width="256" alt="Patrick's Parabox"><br><sub><b>Patrick's Parabox</b><br>~0.2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/persona-5-royal.jpg" width="256" alt="Persona 5 Royal"><br><sub><b>Persona 5 Royal</b><br>~14.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pikmin-4.jpg" width="256" alt="Pikmin 4"><br><sub><b>Pikmin 4</b><br>~10.8 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/raging-loop.jpg" width="256" alt="Raging Loop"><br>Raging Loop<br><sub>~0.9 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/rhythm-heaven-groove.jpg" width="256" alt="Rhythm Heaven Groove"><br>Rhythm Heaven Groove<br><sub>~3 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/romance-of-the-three-kingdoms-8-remake.jpg" width="256" alt="ROMANCE OF THE THREE KINGDOMS 8 REMAKE"><br>ROMANCE OF THE THREE KINGDOMS 8 REMAKE<br><sub>~16.8 GB · controller only</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-brilliant-diamond.jpg" width="256" alt="Pokémon Brilliant Diamond"><br><sub><b>Pokémon Brilliant Diamond</b><br>~4.6 GB · 60 fps con 1.3.0</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-legends-z-a.jpg" width="256" alt="Pokémon Legends: Z-A"><br><sub><b>Pokémon Legends: Z-A</b><br>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-scarlet.png" width="256" alt="Pokémon Scarlet"><br><sub><b>Pokémon Scarlet</b><br>~7.0 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/stardew-valley.jpg" width="256" alt="Stardew Valley"><br>Stardew Valley<br><sub>~0.6 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/steins-gate-reboot.jpg" width="256" alt="STEINS;GATE RE:BOOT"><br>STEINS;GATE RE:BOOT<br><sub>~6 GB</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/super-smash-bros-ultimate.jpg" width="256" alt="Super Smash Bros. Ultimate"><br>Super Smash Bros. Ultimate<br><sub>~17.5 GB · offline</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-sword.jpg" width="256" alt="Pokémon Sword"><br><sub><b>Pokémon Sword</b><br>~12.4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-shield.jpg" width="256" alt="Pokémon Shield"><br><sub><b>Pokémon Shield</b><br>~12.4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/portal.jpg" width="256" alt="Portal"><br><sub><b>Portal</b><br>~2.6 GB</sub></td>
 </tr>
 <tr>
-<td align="center" valign="top" width="33%"><img src="docs/images/taiko-risshiden-v-dx.jpg" width="256" alt="Taiko Risshiden V DX"><br>Taiko Risshiden V DX<br><sub>~3.3 GB · Japanese · played by touch</sub></td>
-<td align="center" valign="top" width="33%"><img src="docs/images/unicorn-overlord.jpg" width="256" alt="Unicorn Overlord"><br>Unicorn Overlord<br><sub>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/raging-loop.jpg" width="256" alt="Raging Loop"><br><sub><b>Raging Loop</b><br>~0.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/rhythm-heaven-groove.jpg" width="256" alt="Rhythm Heaven Groove"><br><sub><b>Rhythm Heaven Groove</b><br>~3 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/romance-of-the-three-kingdoms-8-remake.jpg" width="256" alt="ROMANCE OF THE THREE KINGDOMS 8 REMAKE"><br><sub><b>ROMANCE OF THE THREE KINGDOMS 8 REMAKE</b><br>~16.8 GB · solo con mando</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/sea-of-stars.jpg" width="256" alt="Sea of Stars"><br><sub><b>Sea of Stars</b><br>~5.1 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/shin-megami-tensei-v-vengeance.jpg" width="256" alt="SHIN MEGAMI TENSEI V: Vengeance"><br><sub><b>SHIN MEGAMI TENSEI V: Vengeance</b><br>~14.6 GB · 60 fps con 1.0.3</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/stardew-valley.jpg" width="256" alt="Stardew Valley"><br><sub><b>Stardew Valley</b><br>~0.6 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/steins-gate-reboot.jpg" width="256" alt="STEINS;GATE RE:BOOT"><br><sub><b>STEINS;GATE RE:BOOT</b><br>~6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-smash-bros-ultimate.jpg" width="256" alt="Super Smash Bros. Ultimate"><br><sub><b>Super Smash Bros. Ultimate</b><br>~17.5 GB · sin conexión</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/taiko-risshiden-v-dx.jpg" width="256" alt="Taiko Risshiden V DX"><br><sub><b>Taiko Risshiden V DX</b><br>~3.3 GB · japonés · jugado con el dedo</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/unicorn-overlord.jpg" width="256" alt="Unicorn Overlord"><br><sub><b>Unicorn Overlord</b><br>~4 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/yoshis-crafted-world.jpg" width="256" alt="Yoshi's Crafted World"><br><sub><b><a href="dm/games/01006000040C2000/README.md">Yoshi's Crafted World</a></b><br>~6.1 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/nier-automata.png" width="256" alt="NieR:Automata The End of YoRHa Edition"><br><sub><b>NieR:Automata The End of YoRHa Edition</b><br>~10.9 GB · 60 fps con 1.0.3</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/zelda-echoes-of-wisdom.jpg" width="256" alt="The Legend of Zelda: Echoes of Wisdom"><br><sub><b>The Legend of Zelda: Echoes of Wisdom</b><br>~7.8 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/donkey-kong-country-returns-hd.png" width="256" alt="Donkey Kong Country Returns HD"><br><sub><b>Donkey Kong Country Returns HD</b><br>~11.6 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/mario-rabbids-sparks-of-hope.jpg" width="256" alt="Mario + Rabbids Sparks of Hope"><br><sub><b>Mario + Rabbids Sparks of Hope</b><br>~9.8 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/xenoblade-chronicles-2.jpg" width="256" alt="Xenoblade Chronicles 2"><br><sub><b>Xenoblade Chronicles 2</b><br>~17.1 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/xenoblade-chronicles-3.jpg" width="256" alt="Xenoblade Chronicles 3"><br><sub><b>Xenoblade Chronicles 3</b><br>~19.2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-crystal-chronicles.jpg" width="256" alt="FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition"><br><sub><b>FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition</b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/return-of-the-obra-dinn.png" width="256" alt="Return of the Obra Dinn"><br><sub><b><a href="dm/games/010032E00E6E2000/README.md">Return of the Obra Dinn</a></b><br>~0.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/blasphemous-2.png" width="256" alt="Blasphemous 2"><br><sub><b><a href="dm/games/010040801A4C8000/README.md">Blasphemous 2</a></b><br>~1.5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/silver-pines.jpg" width="256" alt="Silver Pines"><br><sub><b><a href="dm/games/0100D5B026844000/README.md">Silver Pines</a></b></sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/blasphemous.jpg" width="256" alt="Blasphemous"><br><sub><b><a href="dm/games/0100698009C6E000/README.md">Blasphemous</a></b><br>~0.9 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/final-fantasy-x-x2-hd-remaster.jpg" width="256" alt="FINAL FANTASY X/X-2 HD Remaster"><br><sub><b><a href="dm/games/0100BC300CB48000/README.md">FINAL FANTASY X/X-2 HD Remaster</a></b><br>~26.5 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/mario-rabbids-kingdom-battle.jpg" width="256" alt="Mario + Rabbids Kingdom Battle"><br><sub><b><a href="dm/games/010067300059A000/README.md">Mario + Rabbids Kingdom Battle</a></b><br>~5 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/persona-4-golden.jpg" width="256" alt="Persona 4 Golden"><br><sub><b><a href="dm/games/010062B01525C000/README.md">Persona 4 Golden</a></b></sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/xenoblade-chronicles-definitive-edition.jpg" width="256" alt="Xenoblade Chronicles: Definitive Edition"><br><sub><b><a href="dm/games/0100FF500E34A000/README.md">Xenoblade Chronicles: Definitive Edition</a></b><br>~13.2 GB</sub></td>
+<td align="center" valign="top" width="33%"><img src="docs/images/pokemon-legends-arceus.jpg" width="256" alt="Pokémon Legends: Arceus"><br><sub><b><a href="dm/games/01001F5010DFA000/README.md">Pokémon Legends: Arceus</a></b><br>~4.2 GB</sub></td>
+</tr>
+<tr>
+<td align="center" valign="top" width="33%"><img src="docs/images/super-mario-party-jamboree.jpg" width="256" alt="Super Mario Party Jamboree"><br><sub><b><a href="dm/games/0100965017338000/README.md">Super Mario Party Jamboree</a></b></sub></td>
+<td></td>
+<td></td>
 </tr>
 </table>
+<!-- end of gallery -->
 
-## What you need
+## Qué necesitas
 
-- **A Windows 10 or 11 PC (x64)** with free disk space of about twice your NSPs plus 10 GB. The SDK and tools take about 5 GB more.
-- **An iPhone or iPad on iOS / iPadOS 26 or later.** An **A17 Pro or newer** iPhone, or an **M1 or newer** iPad, reads the games' BC-compressed textures on the GPU. On an **A16 or older** chip this fork decodes them on the CPU: it is slower to load, and textures take more memory. Tested on an iPad with an A16.
-- **Your own game dump** (NSP, XCI, NSZ or XCZ: the base game, plus its update and DLC if you have them) and **your own `prod.keys`**.
-- **A free Apple ID**, for two downloads from Apple (below) and for signing the app.
+- **Un PC con Windows 10 u 11 (x64)** y espacio libre de disco de unas dos veces tus NSP más
+  10 GB. El SDK y las herramientas ocupan unos 5 GB más.
+- **Un iPhone o iPad con iOS / iPadOS 26 o posterior.** Un **iPhone A17 Pro o superior**, o
+  un **iPad con M1 o superior**, leen las texturas comprimidas en BC de los juegos en la GPU.
+  En un chip **A16 o anterior** este fork las decodifica en la CPU: tarda más en cargar y las
+  texturas ocupan más memoria. Probado en un iPad con A16.
+- **Tu propio volcado del juego** (NSP, XCI, NSZ o XCZ: el juego base, más su actualización
+  y sus DLC si los tienes) y **tus propias `prod.keys`**.
+- **Un Apple ID gratis**, para las dos descargas de Apple (abajo) y para firmar la app.
 
-## One-time setup
+## Preparación inicial
 
-### 1. Tools from winget and pip
+### 1. Herramientas de winget y pip
 
-Open **PowerShell** and run:
+Abre **PowerShell** y ejecuta:
 
 ```
 winget install --id LLVM.LLVM -e
@@ -316,35 +376,43 @@ winget install --id Meta.Zstandard -e
 python -m pip install lz4 capstone fonttools pillow "backports.zstd; python_version < '3.14'"
 ```
 
-You need Python 3.10 or later from [python.org](https://www.python.org/downloads/). Check "Add python.exe to PATH" when you install it.
+Necesitas Python 3.10 o posterior de [python.org](https://www.python.org/downloads/). Marca
+"Add python.exe to PATH" al instalarlo.
 
-### 2. Two downloads from Apple
+### 2. Dos descargas de Apple
 
-Sign in at [developer.apple.com/download](https://developer.apple.com/download/all/) with your Apple ID:
+Entra en [developer.apple.com/download](https://developer.apple.com/download/all/) con tu
+Apple ID:
 
-1. **Metal Developer Tools for Windows** (version 5.x or 6.x). Install it anywhere, for example `E:\ProjectIOS\Metal Developer Tools`. It compiles the shader libraries.
-2. **Xcode 26 or 27** (`Xcode_27.1.xip`, about 2 GB). Only its iPhoneOS SDK is used. Extract it once (one to two minutes):
+1. **Metal Developer Tools for Windows** (versión 5.x o 6.x). Instálalo donde quieras, por
+   ejemplo `E:\ProjectIOS\Metal Developer Tools`. Compila las librerías de shaders.
+2. **Xcode 26 o 27** (`Xcode_27.1.xip`, unos 2 GB). Solo se usa su SDK de iPhoneOS. Extráelo
+   una vez (uno o dos minutos):
 
    ```
    cd E:\ProjectIOS\nxnative-win
    python win\sdk\extract_xip.py E:\ProjectIOS\Xcode_27.1.xip
    ```
 
-   The SDK lands in `win\sdk\out\iPhoneOS.sdk`. Copying `iPhoneOS.sdk` from a Mac works too.
+   El SDK queda en `win\sdk\out\iPhoneOS.sdk`. También vale copiar `iPhoneOS.sdk` de un Mac.
 
-Apple's Xcode and Apple SDKs Agreement covers these files. Read it before you use them on non-Apple hardware.
+El acuerdo de licencia de Xcode y de los SDK de Apple cubre estos archivos: léelo antes de
+usarlos en hardware que no es de Apple.
 
-### 3. Get this repository
+### 3. Traer este repositorio
 
 ```
 git clone https://github.com/zenvyzenshiro/NXNativeWindows.git E:\ProjectIOS\nxnative-win
 ```
 
-Keep the checkout's line endings as they are. `.gitattributes` turns Git's CRLF conversion off, because the shader chain hashes source bytes.
+Deja los finales de línea del clon tal como están. `.gitattributes` desactiva la conversión
+CRLF de Git, porque la cadena de shaders calcula hashes de los bytes del código.
 
-### 4. Tell the build where the tools are
+### 4. Decirle al build dónde están las herramientas
 
-Copy `win\toolchain.example.json` to `win\toolchain.json` and fix the paths. Tools in their default install folders are found without it. For example:
+Copia `win\toolchain.example.json` a `win\toolchain.json` y corrige las rutas. Las
+herramientas en sus carpetas de instalación por defecto se encuentran sin este archivo. Por
+ejemplo:
 
 ```json
 {
@@ -356,239 +424,348 @@ Copy `win\toolchain.example.json` to `win\toolchain.json` and fix the paths. Too
 }
 ```
 
-Every key can also be set as an environment variable `NXW_<KEY>`, for example `NXW_IOS_SDK`.
+Cada clave se puede poner también como variable de entorno `NXW_<CLAVE>`, por ejemplo
+`NXW_IOS_SDK`.
 
-### 5. Check everything
+### 5. Comprobarlo todo
 
 ```
 python win\doctor.py
 ```
 
-Every line should read `[ok ]`, ending with `everything a build needs is there`. A missing tool prints where to get it.
+Cada línea debería decir `[ok ]`, acabando en `everything a build needs is there`. Una
+herramienta que falte indica de dónde conseguirla.
 
-## Build an IPA with the window
+## Compilar un IPA con la ventana
 
-Double-click **`Build-IPA-GUI.bat`** in the repository folder.
+Haz doble clic en **`Build-IPA-GUI.bat`** dentro de la carpeta del repositorio.
 
-1. **Game files**: click the dashed box to pick your NSP / XCI files (base, update and DLC of one game), or use *Choose folder*. Each file shows as BASE, UPD or DLC with its size. *✕* removes one.
-2. **prod.keys**: click *Browse*. The window finds `prod.keys` by itself when it sits next to the game files.
-3. **Package**: *Single IPA* (everything in one file) or *App + data folder* (see [Split builds](#split-builds-small-ipa--data-folder)). Below it, **Increased Memory Limit** *On* (default: the app asks for the entitlement in its own signature) or *Off* (same as `--no-entitlements`).
-4. Click **Build IPA**. The button turns into the progress bar (stage, step, percentage). A green card then shows the IPA, and *Show in folder* opens it.
+1. **Archivos del juego**: pulsa el recuadro discontinuo para elegir tus NSP / XCI (base,
+   actualización y DLC de un mismo juego), o usa *Choose folder*. Cada archivo aparece como
+   BASE, UPD o DLC con su tamaño. *✕* quita uno.
+2. **prod.keys**: pulsa *Browse*. La ventana encuentra `prod.keys` por su cuenta cuando está
+   junto a los archivos del juego.
+3. **Paquete**: *Single IPA* (todo en un archivo) o *App + data folder* (ver
+   [Compilación partida](#compilación-partida-ipa-pequeño-y-carpeta-de-datos)). Debajo,
+   **Increased Memory Limit** *On* (por defecto: la app pide el permiso en su propia firma) o
+   *Off* (igual que `--no-entitlements`).
+4. Pulsa **Build IPA**. El botón se convierte en la barra de progreso (etapa, paso,
+   porcentaje). Después aparece una tarjeta verde con el IPA, y *Show in folder* lo abre.
 
-Every build uses the defaults. *Details*, shown from the start, lists them:
+Cada compilación usa los valores por defecto. *Details*, visible desde el principio, los
+recoge:
 
-- App name: the game's own name
+- Nombre de la app: el nombre del propio juego
 - Bundle ID: `org.nxnativewindows.<title ID>`
-- Language: the game's default
-- IPA: saved next to your game files (*Change* picks another path)
-- Signing: none (the signing tool signs the IPA when you install it)
+- Idioma: el del propio juego
+- IPA: se guarda junto a tus archivos del juego (*Change* elige otra ruta)
+- Firma: ninguna (la herramienta de firma firma el IPA al instalarlo)
 
-When the folder you pick also holds another game's files, the window hard-links the chosen files into a folder of their own (`<title ID>_nxw`, next to them). The pipeline packs every game file in its folder, so this keeps the games apart, and hard links take no extra disk space.
+Cuando la carpeta que eliges contiene también archivos de otro juego, la ventana crea
+enlaces duros de los archivos elegidos en una carpeta propia (`<title ID>_nxw`, al lado). El
+pipeline empaqueta todos los archivos de juego de su carpeta, así que esto mantiene los
+juegos separados, y los enlaces duros no ocupan disco extra.
 
-## Build an IPA from a terminal
+## Compilar un IPA desde la terminal
 
 ```
 cd E:\ProjectIOS\nxnative-win
 python win\build_ipa_windows.py "E:\ProjectIOS\Games\MarioWonder" -k "E:\ProjectIOS\Games\prod.keys"
 ```
 
-Put one game per folder. The IPA appears in that folder (for example `SMBWMobile.ipa`). The work folder `<title ID>_build\` stays next to it, so later builds of the same game reuse its shader cache and take seconds to minutes. Each stage writes its full log to `<title ID>_build\logs\`. A first build compiles every shader with the Windows Metal compiler: Megabyte Punch's 3,498 shaders take about 3.5 minutes on a 12-thread PC.
+Un juego por carpeta. El IPA aparece en esa carpeta (por ejemplo `SMBWMobile.ipa`). La carpeta
+de trabajo `<title ID>_build\` se queda al lado, así que las compilaciones siguientes del
+mismo juego reutilizan su caché de shaders y tardan de segundos a minutos. Cada etapa escribe
+su log completo en `<title ID>_build\logs\`. La primera compilación compila todos los shaders
+con el compilador de Metal de Windows: los 3.498 shaders de Megabyte Punch tardan unos 3,5
+minutos en un PC de 12 hilos.
 
-The options are upstream's (`-h` lists them all):
+Las opciones son las de upstream (`-h` las lista todas):
 
-| Option | Effect |
+| Opción | Efecto |
 |---|---|
-| `-o D:\out\Game.ipa` | where the IPA goes |
-| `--app-name "Name"` | the name on the home screen |
-| `--bundle-id com.you.game` | another bundle ID (default `org.nxnativewindows.<title ID>`) |
-| `-l ja` | the game language packed into the app |
-| `--show-fps` / `--no-show-fps` | the frame-rate counter's default |
-| `--keep-extracted` / `--no-keep-extracted` | keep or delete the extracted game files after the build |
-| `--env-file my_env.txt` | diagnostic environment variables baked into the app |
-| `--split-data` / `--split-data=D:\data\Game-data` | a small app-only IPA plus a data folder ([Split builds](#split-builds-small-ipa--data-folder)) |
+| `-o D:\out\Juego.ipa` | dónde va el IPA |
+| `--app-name "Nombre"` | el nombre en la pantalla de inicio |
+| `--bundle-id com.tu.juego` | otro bundle ID (por defecto `org.nxnativewindows.<title ID>`) |
+| `-l ja` | el idioma del juego que se empaqueta en la app |
+| `--show-fps` / `--no-show-fps` | el valor por defecto del contador de fotogramas |
+| `--keep-extracted` / `--no-keep-extracted` | conservar o borrar los archivos extraídos del juego tras la compilación |
+| `--env-file my_env.txt` | variables de entorno de diagnóstico metidas en la app |
+| `--split-data` / `--split-data=D:\data\Juego-data` | un IPA solo con la app más una carpeta de datos ([compilación partida](#compilación-partida-ipa-pequeño-y-carpeta-de-datos)) |
 
-Only `--platform ios` builds on Windows. `--prepare-xcode` and the Mac platforms need a Mac.
+En Windows solo compila `--platform ios`. `--prepare-xcode` y las plataformas de Mac
+necesitan un Mac.
 
-## Split builds (small IPA + data folder)
+## Compilación partida: IPA pequeño y carpeta de datos
 
-A normal IPA carries the game files, so signing and installing a 3 GB game takes minutes, every 7 days with a free Apple ID. A split build keeps them apart:
+Un IPA normal lleva dentro los archivos del juego, así que firmar e instalar un juego de 3
+GB tarda minutos, cada 7 días con un Apple ID gratis. Una compilación partida los separa:
 
-- `<Game>.ipa`: only the app (Balatro: 10 MB). LiveContainer installs it in seconds.
-- `<Game>-data\`: `romfs\`, `msl\` (the shader libraries) and `aoc\` (DLC), hard-linked from the build, so it takes no extra disk space. Its `README.txt` repeats these steps.
+- `<Juego>.ipa`: solo la app (Balatro: 10 MB). LiveContainer la instala en segundos.
+- `<Juego>-data\`: `romfs\`, `msl\` (las librerías de shaders) y `aoc\` (los DLC), con enlaces
+  duros desde la compilación, así que no ocupan disco extra. Su `README.txt` repite estos
+  pasos.
 
-Install the IPA, open the app once (it says the game files are missing), then copy the whole `<Game>-data` folder into the app's Documents:
+Instala el IPA, abre la app una vez (dice que faltan los archivos del juego) y copia toda la
+carpeta `<Juego>-data` dentro de *Documents* de la app:
 
-- **Windows**: the *Apple Devices* app (or iTunes) → your device → *Files* → the app → drag the folder in.
-- **On the device**: the *Files* app → *On My iPhone/iPad* → the app, from a USB drive, a network share or iCloud Drive.
+- **En Windows**: la app *Apple Devices* (o iTunes) → tu dispositivo → *Files* → la app →
+  arrastra la carpeta dentro.
+- **En el dispositivo**: la app *Files* → *On My iPhone/iPad* → la app, desde una memoria USB,
+  un recurso de red o iCloud Drive.
 
-Close the app fully and open it again. The app looks for `romfs` in Documents and in every folder directly inside it, so the folder can keep its name. Re-signing the IPA later leaves Documents alone. Copy the data folder again only after a new build of the same game (`nxw_data.tsv` in it names the build). Shaders from one build do not load in an app from another chain version: the log says so.
+Cierra la app del todo y ábrela otra vez. La app busca `romfs` en *Documents* y en cada
+carpeta que hay dentro, así que la carpeta puede conservar su nombre. Volver a firmar el IPA
+después no toca *Documents*. Copia la carpeta de datos otra vez solo tras una compilación
+nueva del mismo juego (`nxw_data.tsv` de dentro indica la compilación). Los shaders de una
+compilación no cargan en una app de otra versión de la cadena: el log lo dice.
 
-## Install the IPA on your iPhone or iPad
+## Instalar el IPA en el iPhone o el iPad
 
-The signing tool is the one that installs the app. This project documents **LiveContainer**,
-which runs each IPA inside its own app:
+La herramienta de firma es la que instala la app. Este proyecto documenta **LiveContainer**,
+que ejecuta cada IPA dentro de su propia app:
 
-1. Install **LiveContainer** ([LiveContainer/LiveContainer](https://github.com/LiveContainer/LiveContainer)) with a signer that lets you add the **Increased Memory Limit** capability (`com.apple.developer.kernel.increased-memory-limit`); SideStore, AltStore and PlumeImpactor can sign it. Ask for that permission on LiveContainer itself: without it iOS gives the app about 3.4 GB and closes the bigger games, with it a recent device gives about 6 GB.
-2. In LiveContainer, import a **signing certificate** (Settings → Certificate, from SideStore/AltStore or a `.p12` with its password): on iOS 26 LiveContainer signs every guest app JIT-less and cannot run one without it.
-3. Install the `.ipa` with the **+** button and pick it from the Files app. The game appears as one more app inside LiveContainer.
-4. On the device, turn on **Settings → Privacy & Security → Developer Mode** and restart. Then trust the signing certificate under **Settings → General → VPN & Device Management**.
-5. Open the game from LiveContainer: the launcher appears, then press **Play**.
+1. Instala **LiveContainer** ([LiveContainer/LiveContainer](https://github.com/LiveContainer/LiveContainer))
+   con un firmador que te deje añadir la capacidad **Increased Memory Limit**
+   (`com.apple.developer.kernel.increased-memory-limit`); SideStore, AltStore y PlumeImpactor
+   pueden firmarlo. Pide ese permiso para LiveContainer mismo: sin él iOS da a la app unos
+   3,4 GB y cierra los juegos grandes; con él, un dispositivo reciente da unos 6 GB.
+2. En LiveContainer, importa un **certificado de firma** (Settings → Certificate, de
+   SideStore/AltStore o un `.p12` con su contraseña): en iOS 26 LiveContainer firma cada app
+   invitada sin JIT y no puede ejecutar una sin certificado.
+3. Instala el `.ipa` con el botón **+** y elígelo desde la app *Files*. El juego aparece como
+   una app más dentro de LiveContainer.
+4. En el dispositivo, activa **Ajustes → Privacidad y seguridad → Modo desarrollador** y
+   reinicia. Después confía en el certificado de firma en **Ajustes → General → VPN y gestión
+   de dispositivos**.
+5. Abre el juego desde LiveContainer: aparece el launcher, y luego pulsa **Play**.
 
-With a free Apple ID the app must be signed again every 7 days.
+Con un Apple ID gratis hay que volver a firmar la app cada 7 días.
 
-## The launcher on the device
+## El launcher en el dispositivo
 
-The settings screen before the game starts follows upstream's single-screen SwiftUI launcher: the game card (icon, name, version, **Play**) on the left third, and on the right every setting under *Game*, *Graphics*, *Controls* and *Performance*, each with its note, then *Reset to tested defaults* and the memory available. On Windows it is drawn by [`win/ios/Launcher.m`](win/ios/Launcher.m), a UIKit port, so no Swift toolchain is needed. Only choices that differ from the game's tested defaults are kept.
+La pantalla de ajustes que sale antes de empezar el juego sigue el launcher de una sola
+pantalla de upstream (SwiftUI): la tarjeta del juego (icono, nombre, versión, **Play**) en el
+tercio izquierdo, y a la derecha todos los ajustes de *Juego*, *Gráficos*, *Controles* y
+*Rendimiento*, cada uno con su nota, luego *Reset to tested defaults* y la memoria
+disponible. En Windows lo dibuja [`win/ios/Launcher.m`](win/ios/Launcher.m), un port a UIKit,
+así que no hace falta ninguna cadena de herramientas de Swift. Solo se guardan las
+elecciones que difieren de los valores por defecto probados del juego.
 
-| Setting | What it does |
+| Ajuste | Qué hace |
 |---|---|
-| **Frame rate** | 30 or 60 fps, in games whose profile can change it (60 fps patches: Tears of the Kingdom, Breath of the Wild, Octopath Traveler 0 1.0.5, …). |
-| **Render scale** | 50–100 % of the game's 3D render size, in games whose rewriter has a dynamic-resolution hook (Tears of the Kingdom, Breath of the Wild). To lower the GPU load in any game, pick *Handheld* (most games render at 720p instead of 1080p), with *Upscaling: MetalFX* to sharpen the result. |
-| **Console mode** | *Docked* (the profile's default; touch games such as Balatro default to *Handheld*, because their touches reach the game only in handheld mode). |
-| **Upscaling** | *Standard* or *MetalFX*: Apple's spatial upscaler for the presented picture, in every game. Uses more GPU time and can increase heat. |
-| **Game language** | The Switch system language, among the languages the game's control data declares (Balatro chooses its language in its own menu). |
-| **Frame-rate counter** | on-screen FPS |
-| **Touch feedback**, **Game rumble**, **Rumble strength** | haptics (*Controls*) |
-| **Frame buffering**, **Metal 4 pipelines**, **Pipeline prebuild**, **Encode thread**, **Hold frames when late**, **Performance HUD** | NVN games' pacing and pipeline options (*Performance*), as upstream documents them |
+| **Frame rate** | 30 o 60 fps, en los juegos cuyo perfil puede cambiarlo (parches de 60 fps: Tears of the Kingdom, Breath of the Wild, Octopath Traveler 0 1.0.5, …). |
+| **Render scale** | 50–100 % del tamaño de render 3D del juego, en los juegos cuyo rewriter tiene un enganche de resolución dinámica (Tears of the Kingdom, Breath of the Wild). Para bajar la carga de la GPU en cualquier juego, elige *Handheld* (la mayoría renderizan a 720p en vez de 1080p), con *Upscaling: MetalFX* para afinar el resultado. |
+| **Console mode** | *Docked* (el valor por defecto del perfil; los juegos táctiles como Balatro vienen en *Handheld*, porque sus toques solo llegan al juego en modo portátil). |
+| **Upscaling** | *Standard* o *MetalFX*: el escalador espacial de Apple para la imagen que se presenta, en todos los juegos. Usa más tiempo de GPU y puede aumentar el calor. |
+| **Game language** | El idioma del sistema de Switch, entre los que declara la información de control del juego (Balatro elige su idioma en su propio menú). |
+| **Contador de fotogramas** | los fps en pantalla |
+| **Touch feedback**, **Game rumble**, **Rumble strength** | vibración (*Controles*) |
+| **Frame buffering**, **Metal 4 pipelines**, **Pipeline prebuild**, **Encode thread**, **Hold frames when late**, **Performance HUD** | opciones de ritmo y de pipelines de los juegos NVN (*Rendimiento*), tal como las documenta upstream |
 
-The list itself is upstream's ([`dm/games/settings.tsv`](dm/games/settings.tsv)), so a setting appears only in the games it applies to. An `env.txt` in the app's Documents folder (Files app) still overrides any setting, as upstream documents.
+La lista es la de upstream ([`dm/games/settings.tsv`](dm/games/settings.tsv)), así que un
+ajuste solo aparece en los juegos a los que aplica. Un `env.txt` en *Documents* de la app
+(app *Files*) sigue mandando sobre cualquier ajuste, como documenta upstream.
 
-## How long a build takes
+## Cuánto tarda una compilación
 
-The first build of a game compiles every one of its shaders with Apple's Metal compiler; the builds after it reuse the cache in the build folder. Two stages are long:
+La primera compilación de un juego compila todos sus shaders con el compilador de Metal de
+Apple; las siguientes reutilizan la caché de la carpeta de compilación. Dos etapas son largas:
 
-| Stage | What it does | Cost |
+| Etapa | Qué hace | Coste |
 |---|---|---|
-| Translation | The game's shader binaries → SPIR-V (Ryujinx's translator) → MSL (spirv-cross) | ~38 shaders/s |
-| Metal compile | MSL → `.metallib` for iPhoneOS (`metal.exe` + `metallib.exe`) | 0.42 s of CPU per shader |
+| Traducción | Los binarios de shaders del juego → SPIR-V (el traductor de Ryujinx) → MSL (spirv-cross) | ~38 shaders/s |
+| Compilación con Metal | MSL → `.metallib` para iPhoneOS (`metal.exe` + `metallib.exe`) | 0,42 s de CPU por shader |
 
-Measured on a 6-core / 12-thread Ryzen 5 5600G with Metal Developer Tools 32023.850:
+Medido en un Ryzen 5 5600G de 6 núcleos / 12 hilos con Metal Developer Tools 32023.850:
 
-| Game | Shaders | First build | Later builds |
+| Juego | Shaders | Primera compilación | Las siguientes |
 |---|---|---|---|
-| BALL x PIT | 22,319 (6,584 distinct MSL texts) | ~25 min | minutes |
-| The Legend of Zelda: Tears of the Kingdom | 28,669 | ~35 min (estimated) | minutes |
-| Pokémon Pokopia (Switch 2) | 131,382 | ~1 h of translation + ~10 h of Metal compile | — |
+| BALL x PIT | 22.319 (6.584 textos de MSL distintos) | ~25 min | minutos |
+| The Legend of Zelda: Tears of the Kingdom | 28.669 | ~35 min (estimado) | minutos |
+| Pokémon Pokopia (Switch 2) | 131.382 | ~1 h de traducción + ~10 h de compilación con Metal | — |
 
-Apple's `metal.exe` is a host compiler (a clang driver with the Metal back end): it runs on the CPU and never uses the PC's graphics card, so this stage cannot be moved to the GPU. A Switch 2 shader costs about five times more than a Switch 1 one (the Ampere SM86 programs are far larger), which is why a 131,382-shader game takes hours.
+El `metal.exe` de Apple es un compilador de host (un driver de clang con el back end de
+Metal): corre en la CPU y nunca usa la tarjeta gráfica del PC, así que esta etapa no se
+puede pasar a la GPU. Un shader de Switch 2 cuesta unas cinco veces más que uno de Switch 1
+(los programas Ampere SM86 son mucho más grandes), y por eso un juego de 131.382 shaders se
+tarda horas.
 
-## Speeding up the shader build
+## Acelerar la compilación de shaders
 
-| Lever | Effect |
+| Palanca | Efecto |
 |---|---|
-| More cores | Linear: twice the cores, half the time. `NXW_SHADER_JOBS` sets the number of workers (one per logical core by default) |
-| Keep `<title ID>_build\` | It holds the cache. Delete the IPA, not the folder |
-| One platform per folder | A folder that already holds a Mac build's libraries of the same chain compiles the macOS ones too, which doubles the Metal work |
-| Another machine | A cloud VM with 32 vCPUs through the Linux path ([win/LINUX.md](win/LINUX.md)), or an Apple silicon Mac |
+| Más núcleos | Lineal: el doble de núcleos, la mitad de tiempo. `NXW_SHADER_JOBS` fija el número de trabajadores (por defecto, uno por hilo lógico) |
+| Conservar `<title ID>_build\` | Es la caché. Borra el IPA, no la carpeta |
+| Una plataforma por carpeta | Una carpeta que ya tiene las librerías de un build de Mac de la misma cadena compila también las de macOS, y eso duplica el trabajo de Metal |
+| Otra máquina | Una máquina en la nube con 32 vCPU por la vía de Linux ([win/LINUX.md](win/LINUX.md)), o un Mac con chip Apple silicon |
 
-Measured with 72 shaders: 6 workers give 9.2 shaders/s, 12 give 14.8, 18 give 14.6 and 24 give 14.6. More workers than cores do not help.
+Medido con 72 shaders: 6 trabajadores dan 9,2 shaders/s, 12 dan 14,8, 18 dan 14,6 y 24 dan
+14,6. Más trabajadores que núcleos no ayudan.
 
-Measured and **not** helpful: `-O0` (slower, 6.6 against 10.5 shaders/s), dropping `-fpreserve-invariance` (no change), sharing the Metal cache between games (only 0.2 % of the MSL texts match across two games) and the GPU (the compiler does not use it).
+Medido y **sin** resultado: `-O0` (más lento, 6,6 frente a 10,5 shaders/s), quitar
+`-fpreserve-invariance` (sin cambio), compartir la caché de Metal entre juegos (solo coincide
+el 0,2 % de los textos de MSL entre dos juegos) y la GPU (el compilador no la usa).
 
-The full measurements, and the other projects that run Switch games on Apple silicon, are in the Spanish guide [Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md).
+Las medidas completas, y los otros proyectos que hacen correr juegos de Switch en Apple
+silicon, están en la guía [Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md).
 
-## How the Windows build works
+## Cómo funciona la compilación en Windows
 
-`win/build_ipa_windows.py` runs upstream's own pipeline (`scripts/build_ipa_from_nsp.py`) unchanged. Only the steps that call macOS tools are replaced, at the subprocess boundary:
+`win/build_ipa_windows.py` ejecuta el pipeline de upstream (`scripts/build_ipa_from_nsp.py`)
+sin cambiarlo. Solo se sustituyen los pasos que llaman a herramientas de macOS, en el
+límite del subproceso:
 
-| Step | Upstream on a Mac | NXNative for Windows |
+| Paso | Upstream en un Mac | NXNative para Windows |
 |---|---|---|
-| Extract NSP / XCI (LibHac) | `nx_extract` (.NET) | the same, built with the .NET SDK for Windows |
-| Rewrite the game modules | `patch_nso.py` | the same |
-| Translate shaders (Ryujinx) | `dmsh_xlate` apphost | the same locked DLLs through `dotnet dmsh_xlate.dll`, so the chain's fingerprints still match `dmsh_chain.lock` |
-| Compile shader libraries | `xcrun metal` / `metallib` (Xcode) | Metal Developer Tools for Windows, through [`win/xcrun.py`](win/xcrun.py) (`-mios-version-min` becomes `-target air64-apple-ios…`) |
-| Build the app | `xcodegen` + `xcodebuild` | LLVM `clang -target arm64-apple-ios26.0 -isysroot iPhoneOS.sdk`, linked by `ld64.lld` ([`win/build_app.py`](win/build_app.py)) |
-| Launcher | `Launcher.swift` (SwiftUI) | [`win/ios/Launcher.m`](win/ios/Launcher.m) (UIKit, same contract) |
-| `@available` runtime | Apple's compiler-rt | [`win/ios/compat_rt.c`](win/ios/compat_rt.c) |
-| App icon | `actool` asset catalog | PNG icons in `CFBundleIcons` (Pillow) |
-| `sips`, `plutil`, `make -n` | macOS tools | Pillow, `plistlib`, the Makefile's source rules reproduced (the build stops if they change) |
-| Executable's x bit in the IPA | Unix modes | `pack_ipa.py --exec` (Windows has no Unix modes) |
-| iPhoneOS SDK | inside Xcode | [`win/sdk/extract_xip.py`](win/sdk/extract_xip.py) reads `Xcode.xip` (xar → pbzx → cpio), including Xcode 27's deduplicated archive, whose hard links hold `NULLcanary` placeholders |
-| Run-time GL shaders of LÖVE games | boot the game in the Mac host (`DM_GL_CAPTURE`) | [`win/love_shaders.py`](win/love_shaders.py) assembles the same GLSL offline from the Lua that love-nx embeds in `main`. LÖVE's defaults match upstream's capture table byte for byte, and all 31 keys an iPad run asked for match. |
-| Heap check of a new game | boot it in the Mac host | an estimate: a 2 GB application pool for games with virtual address memory, stamped into the profile |
-| Address-region cuts for an unregistered `sdk` build | added by hand per build ID | [`win/sdk_auto_cuts.py`](win/sdk_auto_cuts.py) finds them from the code (the `AddressRegionManager` constructor's node-area loads and the 1 GB alignment), only when the match is unique |
+| Extraer NSP / XCI (LibHac) | `nx_extract` (.NET) | el mismo, compilado con el .NET SDK para Windows |
+| Reescribir los módulos del juego | `patch_nso.py` | el mismo |
+| Traducir shaders (Ryujinx) | el apphost `dmsh_xlate` | las mismas DLL fijadas por `dotnet dmsh_xlate.dll`, para que las huellas de la cadena sigan cuadrando con `dmsh_chain.lock` |
+| Compilar las librerías de shaders | `xcrun metal` / `metallib` (Xcode) | Metal Developer Tools para Windows, a través de [`win/xcrun.py`](win/xcrun.py) (`-mios-version-min` pasa a ser `-target air64-apple-ios…`) |
+| Compilar la app | `xcodegen` + `xcodebuild` | LLVM `clang -target arm64-apple-ios26.0 -isysroot iPhoneOS.sdk`, enlazado por `ld64.lld` ([`win/build_app.py`](win/build_app.py)) |
+| Launcher | `Launcher.swift` (SwiftUI) | [`win/ios/Launcher.m`](win/ios/Launcher.m) (UIKit, el mismo contrato) |
+| Runtime de `@available` | el compiler-rt de Apple | [`win/ios/compat_rt.c`](win/ios/compat_rt.c) |
+| Icono de la app | el catálogo de recursos de `actool` | iconos PNG en `CFBundleIcons` (Pillow) |
+| `sips`, `plutil`, `make -n` | herramientas de macOS | Pillow, `plistlib`, las reglas de fuentes del Makefile reproducidas (la compilación se detiene si cambian) |
+| Bit de ejecución del ejecutable en el IPA | modos de Unix | `pack_ipa.py --exec` (Windows no tiene modos de Unix) |
+| SDK de iPhoneOS | dentro de Xcode | [`win/sdk/extract_xip.py`](win/sdk/extract_xip.py) lee `Xcode.xip` (xar → pbzx → cpio), incluido el archivo deduplicado de Xcode 27, cuyos enlaces duros llevan marcadores `NULLcanary` |
+| Shaders GL de ejecución de los juegos LÖVE | arrancar el juego en el host de Mac (`DM_GL_CAPTURE`) | [`win/love_shaders.py`](win/love_shaders.py) monta el mismo GLSL fuera de línea desde el Lua que love-nx incrusta en `main`. Los valores por defecto de LÖVE coinciden byte a byte con la tabla de captura de upstream, y las 31 claves que pidió una ejecución en un iPad coinciden. |
+| Comprobación del heap de un juego nuevo | arrancarlo en el host de Mac | una estimación: un pool de aplicación de 2 GB para los juegos con memoria de direcciones virtuales, estampado en el perfil |
+| Cortes de regiones de direcciones para un build `sdk` sin registrar | añadidos a mano por build ID | [`win/sdk_auto_cuts.py`](win/sdk_auto_cuts.py) los encuentra en el código (las cargas de node-area del constructor de `AddressRegionManager` y la alineación de 1 GB), solo cuando la coincidencia es única |
 
-[`win/pyshim/sitecustomize.py`](win/pyshim/sitecustomize.py) loads in every Python the pipeline starts. It maps `xcrun`, `dmsh_xlate`, `which`, `python3` and `bash build_ipa.sh` to their Windows counterparts, and makes `ctypes.CDLL(None)` safe. The technical notes are in [win/README.md](win/README.md).
+[`win/pyshim/sitecustomize.py`](win/pyshim/sitecustomize.py) se carga en cada Python que
+arranca el pipeline. Mapea `xcrun`, `dmsh_xlate`, `which`, `python3` y `bash build_ipa.sh` a
+sus equivalentes de Windows, y hace seguro `ctypes.CDLL(None)`. Las notas técnicas están en
+[win/README.md](win/README.md).
 
-## Which games build on Windows
+## Qué juegos compilan en Windows
 
-Upstream lists about 65 playable games in its [games table](dm/games/README.md#games), with each game's tested version. On Windows:
+Upstream lista unos 65 juegos jugables en su [tabla de juegos](dm/games/README.md#games), con
+la versión probada de cada uno. En Windows:
 
-- **Most games build as on a Mac.** Examples: Super Mario Bros. Wonder, Super Mario Odyssey, Mario Kart 8 Deluxe, Zelda: Breath of the Wild and Tears of the Kingdom.
-- **LÖVE games** (Balatro) build: their run-time shaders are rebuilt offline.
-- **Games whose shaders exist only at run time** (Fire Emblem: Three Houses and Portal through GLSLC, Super Mario Galaxy 1 & 2 through Vulkan) are captured **on your device**, as upstream captures them on a Mac:
-  1. The first build packs `<Game>-capture.ipa` (no shader libraries; its `dm/env.txt` turns the host's capture on) and stops with instructions.
-  2. Install it and play until the title screen, then wait a minute. There may be no picture, because the game has no shaders yet. The host saves every shader the game compiles into the app's Documents.
-  3. In the Files app, copy the folder (`glslc_capture` or `vk_capture`) next to the game files on the PC, and build again. The build checks it against the profile's table and makes the real IPA.
-- **Oodle, Unreal and LZ5 games** (Octopath Traveler 0 / II, Bayonetta 3, ASTRAL CHAIN, Pokémon Legends: Z-A, DRAGON QUEST XI S, FINAL FANTASY RESONANCE) decode their shader archives with the game's own decoder, run in an emulated ARM64 machine ([`win/oodle_emu.py`](win/oodle_emu.py), [`win/arm64_emu.py`](win/arm64_emu.py)). Octopath Traveler 0's 10,596 Oodle-compressed shaders decode this way.
-- **Games without an upstream profile** (Megabyte Punch) get a provisional profile guessed from a survey. The IPA is a best effort and may not boot until the game is brought up ([docs/agents](docs/agents/README.md)).
-- **Use the tested version.** Another version builds with its own shaders, but the fixes made for the tested build (60 fps patches and others) do not apply, and the build says so.
+- **La mayoría compila como en un Mac.** Ejemplos: Super Mario Bros. Wonder, Super Mario
+  Odyssey, Mario Kart 8 Deluxe, Zelda: Breath of the Wild y Tears of the Kingdom.
+- **Los juegos de LÖVE** (Balatro) compilan: sus shaders de ejecución se reconstruyen fuera de
+  línea.
+- **Los juegos cuyos shaders solo existen en ejecución** (Fire Emblem: Three Houses y Portal con
+  GLSLC, Super Mario Galaxy 1 y 2 con Vulkan) se capturan **en tu dispositivo**, igual que
+  upstream los captura en un Mac:
+  1. La primera compilación empaqueta `<Juego>-capture.ipa` (sin librerías de shaders; su
+     `dm/env.txt` activa la captura del host) y se detiene con las instrucciones.
+  2. Instálala y juega hasta la pantalla de título, y espera un minuto. Puede no haber imagen,
+     porque el juego todavía no tiene shaders. El host guarda en *Documents* de la app todos
+     los shaders que el juego compila.
+  3. En la app *Files*, copia la carpeta (`glslc_capture` o `vk_capture`) junto a los archivos
+     del juego en el PC, y compila otra vez. La compilación la contrasta con la tabla del
+     perfil y hace el IPA de verdad.
+- **Los juegos de Oodle, Unreal y LZ5** (Octopath Traveler 0 / II, Bayonetta 3, ASTRAL CHAIN,
+  Pokémon Legends: Z-A, DRAGON QUEST XI S, FINAL FANTASY RESONANCE) decodifican sus archivos
+  de shaders con el decodificador del propio juego, ejecutado en una máquina ARM64 emulada
+  ([`win/oodle_emu.py`](win/oodle_emu.py), [`win/arm64_emu.py`](win/arm64_emu.py)). Los 10.596
+  shaders de Octopath Traveler 0 comprimidos con Oodle se decodifican así.
+- **Los juegos sin perfil de upstream** (Megabyte Punch) reciben un perfil provisional deducido
+  de un sondeo. El IPA es un intento y puede no arrancar hasta que se trabaja el juego
+  ([docs/agents](docs/agents/README.md)).
+- **Usa la versión probada.** Otra versión compila con sus propios shaders, pero los arreglos
+  hechos para la compilación probada (los parches de 60 fps y otros) no se aplican, y la
+  compilación lo dice.
 
-## Switch 2 games
+## Juegos de Switch 2
 
-Switch 2 titles are supported by the engine itself: NVN2 and Ounce (Ampere) translated to Metal, the Ampere shader front end, and the `.nup` containers that need no `prod.keys`. A Switch 2 game is built from a folder (`base/`, `updates/`, `dlc/`) or from a `.nup` file:
+Los juegos de Switch 2 los soporta el propio motor: NVN2 y Ounce (Ampere) traducidos a Metal,
+el front end de shaders de Ampere y los contenedores `.nup`, que no necesitan `prod.keys`. Un
+juego de Switch 2 se compila desde una carpeta (`base/`, `updates/`, `dlc/`) o desde un
+archivo `.nup`:
 
 ```
 python win\build_ipa_windows.py "C:\Juegos\MiJuego.nup" --allow-other-metal
 ```
 
-`--allow-other-metal` is required on Windows: the Metal compiler there is `metalfe-custom-windows` (32023.850) and the engine only accepts the one from Xcode 27.2 (32023.922) by default.
+`--allow-other-metal` hace falta en Windows: el compilador de Metal de ahí es
+`metalfe-custom-windows` (32023.850) y el motor solo acepta por defecto el de Xcode 27.2
+(32023.922).
 
-Their shaders are the expensive ones: Pokopia's 131,382 took ~1 h to translate and ~10 h to compile on a 12-thread PC. The Spanish guide [NX2Apple y Switch 2](docs/ca-ninapple/NX2APPLE-SWITCH2.md) has the whole flow: the engine pin, the translator rebuild the lock file needs on Windows, and what each game's profile asks for.
+Sus shaders son los caros: los 131.382 de Pokopia tardaron ~1 h en traducirse y ~10 h en
+compilarse en un PC de 12 hilos. La guía [NX2Apple y Switch 2](docs/ca-ninapple/NX2APPLE-SWITCH2.md)
+tiene el flujo completo: el pin del motor, la reconstrucción del traductor que el lock file
+necesita en Windows, y lo que pide el perfil de cada juego.
 
-## Building on Linux
+## Compilar en Linux
 
-The same driver, `win/build_ipa_windows.py`, also runs on Linux. There it calls native LLVM (clang and ld64.lld, 20 or later), the .NET 10 SDK, spirv-cross and zstd, and starts Apple's `metal.exe` and `metallib.exe` through Wine ([`win/toolchain.py`](win/toolchain.py) `cmd()`). It was tested on Pop!_OS (Ubuntu 24.04 base) with Wine 9.0, LLVM 23.1.4 and .NET SDK 10.0.403, building Pokémon Legends: Arceus 1.0.2 from a provisional profile, which played in game on an iPhone 16. [win/LINUX.md](win/LINUX.md) has the setup, the shader chain lock on Linux, building, installing from Linux, and the Linux problems the port handles.
+El mismo driver, `win/build_ipa_windows.py`, también funciona en Linux. Allí llama al LLVM
+nativo (clang y ld64.lld, versión 20 o posterior), al .NET SDK 10, a spirv-cross y a zstd, y
+arranca el `metal.exe` y el `metallib.exe` de Apple a través de Wine ([`win/toolchain.py`](win/toolchain.py)
+`cmd()`). Se probó en Pop!_OS (base Ubuntu 24.04) con Wine 9.0, LLVM 23.1.4 y .NET SDK
+10.0.403, compilan Pokémon Legends: Arceus 1.0.2 desde un perfil provisional, que jugó en
+game en un iPhone 16. [win/LINUX.md](win/LINUX.md) tiene la instalación, el lock de la cadena
+de shaders en Linux, la compilación, la instalación desde Linux y los problemas de Linux que
+resuelve el port.
 
-## Troubleshooting
+## Problemas
 
-| Message or symptom | What to do |
+| Mensaje o síntoma | Qué hacer |
 |---|---|
-| `doctor.py` shows `MISSING` | Install what the `get it:` line names, or set its path in `win\toolchain.json`. |
-| `this game compiles … shaders only at run time; they are captured on your device` | Follow the three steps the message gives: install the capture IPA, play to the title screen, copy the capture folder next to the game files, build again. |
-| `[RED] this IPA uses vX, which game profile … was not brought up on` | Put the update named in upstream's games table in the same folder and build again. |
-| `[RED] provisional game profile …` | The game has no upstream profile: the IPA may not boot. Send the device log (below). |
-| The app closes right after *Play* | Open the **Files** app → *On My iPhone/iPad* → the game → `log.txt` (and `log.prev.txt`), and look at its last lines. [docs/agents/symptoms.md](docs/agents/symptoms.md) indexes known messages. |
-| A 3D game closes while loading on an older device | BC textures are decoded on the CPU there and take more memory: sign with *Increased Memory Limit*. `log.txt` says `BC textures: decoded on the CPU` when the fallback is on. |
-| The name or bundle ID on the device differs from the build | Keep the build's *App Name* / *Bundle ID* in the signing tool. |
-| A stage failed | Its full log is in `<title ID>_build\logs\` next to the game files. |
+| `doctor.py` muestra `MISSING` | Instala lo que dice su línea `get it:` o pon su ruta en `win\toolchain.json`. |
+| `this game compiles … shaders only at run time; they are captured on your device` | Sigue los tres pasos que da el mensaje: instala el IPA de captura, juega hasta la pantalla de título, copia la carpeta de captura junto a los archivos del juego y compila otra vez. |
+| `[RED] this IPA uses vX, which game profile … was not brought up on` | Pon en la misma carpeta la actualización que nombra la tabla de juegos de upstream y compila otra vez. |
+| `[RED] provisional game profile …` | El juego no tiene perfil de upstream: puede que el IPA no arranque. Manda el log del dispositivo (abajo). |
+| La app se cierra justo después de *Play* | Abre la app **Files** → *On My iPhone/iPad* → el juego → `log.txt` (y `log.prev.txt`), y mira sus últimas líneas. [docs/agents/symptoms.md](docs/agents/symptoms.md) indexa los mensajes conocidos. |
+| Un juego 3D se cierra mientras carga en un dispositivo antiguo | Allí las texturas BC se decodifican en la CPU y ocupan más memoria: firma con *Increased Memory Limit*. `log.txt` dice `BC textures: decoded on the CPU` cuando está activo ese camino. |
+| El nombre o el bundle ID en el dispositivo no es el del build | Mantén el *App Name* / *Bundle ID* del build en la herramienta de firma. |
+| Una etapa falló | Su log completo está en `<title ID>_build\logs\`, junto a los archivos del juego. |
 
-## Differences from upstream
+## Diferencias con upstream
 
-- **Windows build path** in [`win/`](win/), and the window `Build-IPA-GUI.bat`. The same path runs on Linux ([win/LINUX.md](win/LINUX.md)).
-- **Default bundle ID `org.nxnativewindows.<title ID>`** in every build path, so these apps install beside upstream-built ones.
-- **Derived profiles** get a RomFS marker that their version has (Balatro v0 lacks 1.1.3's marker file).
-- **`pack_ipa.py --exec`** sets the executable's mode when packing on Windows.
-- **`.gitattributes`** keeps every file byte-identical to upstream on Windows, and the shim writes every pipeline text file with LF line ends, as on a Mac. With CRLF, the host refused the shader libraries' stamp.
-- **BC textures on GPUs without BC** (A16 and older) are decoded on the CPU ([`dm/gfx/tex/bc_soft.c`](dm/gfx/tex/bc_soft.c); `DM_BC_SOFT=1` forces it, `=0` turns it off).
-- **Address-region cuts for unregistered `sdk` builds** are found from the code ([`win/sdk_auto_cuts.py`](win/sdk_auto_cuts.py)).
+- **Ruta de compilación para Windows** en [`win/`](win/), y la ventana `Build-IPA-GUI.bat`. La
+  misma ruta funciona en Linux ([win/LINUX.md](win/LINUX.md)).
+- **Bundle ID por defecto `org.nxnativewindows.<title ID>`** en todas las rutas de compilación,
+  para que estas apps se instalen junto a las compiladas por upstream.
+- **Los perfiles derivados** reciben un marcador de RomFS del de su versión (Balatro v0 no
+  tiene el archivo de marcador de la 1.1.3).
+- **`pack_ipa.py --exec`** fija el modo del ejecutable al empaquetar en Windows.
+- **`.gitattributes`** mantiene cada archivo byte a byte idéntico a upstream en Windows, y el
+  shim escribe cada archivo de texto del pipeline con finales de línea LF, como en un Mac. Con
+  CRLF, el host rechazaba el sello de las librerías de shaders.
+- **Texturas BC en GPU sin BC** (A16 y anteriores) se decodifican en la CPU
+  ([`dm/gfx/tex/bc_soft.c`](dm/gfx/tex/bc_soft.c); `DM_BC_SOFT=1` lo fuerza, `=0` lo desactiva).
+- **Cortes de regiones de direcciones para builds `sdk` sin registrar** se encuentran en el
+  código ([`win/sdk_auto_cuts.py`](win/sdk_auto_cuts.py)).
 
-## Repository layout
+## Estructura del repositorio
 
-| Path | What it is |
+| Ruta | Qué es |
 |---|---|
-| `Build-IPA-GUI.bat` | starts the window |
-| `win/gui.pyw` | the window (Tkinter, black and pink) |
-| `win/build_ipa_windows.py` | the Windows driver around upstream's NSP script |
-| `win/build_app.py` | the app build that replaces `build_ipa.sh` / Xcode |
-| `win/xcrun.py`, `win/toolchain.py` | the `xcrun` stand-in and the tool locator |
-| `win/pyshim/sitecustomize.py` | the subprocess shim loaded by every pipeline Python |
-| `win/ios/Launcher.m`, `win/ios/compat_rt.c` | the UIKit launcher and the `@available` runtime |
-| `win/love_shaders.py` | LÖVE run-time shaders, offline |
-| `win/sdk_auto_cuts.py` | address-region cuts for unregistered `sdk` builds |
-| `win/sdk/extract_xip.py` | iPhoneOS SDK from `Xcode.xip` |
-| `win/doctor.py`, `win/compile_check.py` | toolchain check; compile every app source without game files |
-| `win/tests/test_win.py` | unit tests of the Windows parts |
-| `win/TUTORIAL.md` | the step-by-step guide in Indonesian |
-| `win/LINUX.md` | building on Linux, step by step |
-| `win/README.md` | technical notes on the port |
-| everything else | upstream nxnative ([README.nxnative.md](README.nxnative.md), [docs/development.md](docs/development.md)) |
+| `Build-IPA-GUI.bat` | arranca la ventana |
+| `win/gui.pyw` | la ventana (Tkinter, negra y rosa) |
+| `win/build_ipa_windows.py` | el driver de Windows alrededor del script de NSP de upstream |
+| `win/build_app.py` | la compilación de la app que sustituye a `build_ipa.sh` / Xcode |
+| `win/xcrun.py`, `win/toolchain.py` | el sustituto de `xcrun` y el localizador de herramientas |
+| `win/pyshim/sitecustomize.py` | el shim de subprocesos que carga cada Python del pipeline |
+| `win/ios/Launcher.m`, `win/ios/compat_rt.c` | el launcher en UIKit y el runtime de `@available` |
+| `win/love_shaders.py` | los shaders de ejecución de LÖVE, fuera de línea |
+| `win/sdk_auto_cuts.py` | cortes de regiones de direcciones para builds `sdk` sin registrar |
+| `win/sdk/extract_xip.py` | el SDK de iPhoneOS desde `Xcode.xip` |
+| `win/doctor.py`, `win/compile_check.py` | comprobación de la cadena de herramientas; compilar todas las fuentes de la app sin archivos de juego |
+| `win/tests/test_win.py` | pruebas unitarias de las partes de Windows |
+| `win/TUTORIAL.md` | la guía paso a paso en indonesio |
+| `win/LINUX.md` | compilar en Linux, paso a paso |
+| `win/README.md` | notas técnicas del port |
+| todo lo demás | el nxnative de upstream ([README.nxnative.md](README.nxnative.md), [docs/development.md](docs/development.md)) |
 
-Local files git ignores: `win/toolchain.json`, `win/gui_settings.json`, `win/sdk/out/` (the extracted SDK) and `win/build/`.
+Archivos locales que git ignora: `win/toolchain.json`, `win/gui_settings.json`, `win/sdk/out/`
+(el SDK extraído) y `win/build/`.
 
-## Updating from upstream
+## Actualizar desde upstream
 
-Last synced with [seedds/nxnative](https://github.com/seedds/nxnative) on 2026-10-27 (135 upstream commits: Kirby and the Forgotten Land's profile, the RomFS image extraction, the region check, the newer launcher contract, and more). The sync before it, on 2026-10-26 (46 upstream commits), brought MetalFX upscaling and the single-screen launcher, offline pipeline archives, the prepare step, hybrid pipelines, Pokémon Shield and Brilliant Diamond, Echoes of Wisdom 1.1.0 and thermal frame-rate caps. The offline pipeline archive (`DM_PSO_GPUS`, default for games whose profile sets `pso_mtl4`) builds on Windows too: Metal Developer Tools for Windows ship `metal-tt`.
+Última sincronización con [seedds/nxnative](https://github.com/seedds/nxnative) el 2026-10-27
+(135 commits de upstream: el perfil de Kirby and the Forgotten Land, la extracción de la
+imagen de RomFS, la comprobación de región, el contrato más nuevo del launcher, y más). La
+sincronización anterior, el 2026-10-26 (46 commits de upstream), trajo el escalado con
+MetalFX y el launcher de una pantalla, los archivos de pipelines sin conexión, el paso de
+preparación, las pipelines híbridas, Pokémon Shield y Brilliant Diamond, Echoes of Wisdom
+1.1.0 y los límites de fps por temperatura. El archivo de pipelines sin conexión
+(`DM_PSO_GPUS`, por defecto en los juegos cuyo perfil pone `pso_mtl4`) también compila en
+Windows: Metal Developer Tools for Windows trae `metal-tt`.
 
 ```
 git remote add upstream https://github.com/seedds/nxnative.git
@@ -598,19 +775,37 @@ python win\tests\test_win.py
 python win\compile_check.py
 ```
 
-`win/build_app.py` checks `dm/host/Makefile`'s source rules and stops with a clear message when upstream changes them. The functions the driver wraps can also change their arguments upstream; after a merge, check them against `scripts/build_ipa_from_nsp.py` before the first build. When a merge brings a new translator build, keep upstream's DLL lines in `dm/gfx/tools/dmsh_chain.lock` and this port's spirv-cross and Metal lines, then run `dmsh_chain.py --header`.
+`win/build_app.py` comprueba las reglas de fuentes del `dm/host/Makefile` y se detiene con un
+mensaje claro cuando upstream las cambia. Las funciones que envuelve el driver también
+pueden cambiar sus argumentos en upstream; después de una fusión, contrástalas con
+`scripts/build_ipa_from_nsp.py` antes de la primera compilación. Cuando una fusión traiga
+una compilación nueva del traductor, deja en `dm/gfx/tools/dmsh_chain.lock` las líneas de las
+DLL de upstream y las de spirv-cross y Metal de este port, y ejecuta luego
+`dmsh_chain.py --header`.
 
-## Credits and license
+## Créditos y licencia
 
-- **[seedds/nxnative](https://github.com/seedds/nxnative)** and everything it builds on: [d2r-mobile](https://github.com/jhaizhou-ops/d2r-mobile), Ryujinx, Atmosphère, yuzu, LibHac, SPIRV-Cross, glslang, deko3d and the libraries in `dm/third_party` (see [README.nxnative.md](README.nxnative.md#acknowledgements)).
-- **Apple's** Metal Developer Tools for Windows and iPhoneOS SDK are downloaded by each user under Apple's terms and are not part of this repository.
-- **[LLVM](https://llvm.org/)** (clang, ld64.lld) builds the app on Windows and Linux, and **[Wine](https://www.winehq.org/)** runs Apple's Metal compiler on Linux.
-- Linux support by [amansingh909](https://github.com/amansingh909).
+- **[seedds/nxnative](https://github.com/seedds/nxnative)** y todo lo que hay detrás:
+  [d2r-mobile](https://github.com/jhaizhou-ops/d2r-mobile), Ryujinx, Atmosphère, yuzu, LibHac,
+  SPIRV-Cross, glslang, deko3d y las librerías de `dm/third_party` (ver
+  [README.nxnative.md](README.nxnative.md#acknowledgements)).
+- El **Metal Developer Tools for Windows** de Apple y el SDK de iPhoneOS los descarga cada
+  usuario bajo los términos de Apple y no forman parte de este repositorio.
+- **[LLVM](https://llvm.org/)** (clang, ld64.lld) compila la app en Windows y en Linux, y
+  **[Wine](https://www.winehq.org/)** hace correr el compilador de Metal de Apple en Linux.
+- El soporte de Linux, por [amansingh909](https://github.com/amansingh909).
 
-MIT License, as upstream ([LICENSE](LICENSE)).
+Licencia MIT, como upstream ([LICENSE](LICENSE)).
 
-## Legal notice
+## Aviso legal
 
-This is an independent, unofficial developer tool for interoperability and preservation research. It is not affiliated with, endorsed by, or sponsored by Nintendo, Apple, or any game publisher. All trademarks and game titles belong to their owners and are named only to describe compatibility; cover images are shown for identification only.
+Esta es una herramienta de desarrollo independiente y no oficial para interoperabilidad y
+investigación de preservación. No está afiliada, respaldada ni patrocinada por Nintendo,
+Apple ni ninguna editora. Todas las marcas y los títulos de los juegos son de sus Owners y se
+nombran solo para describir la compatibilidad; las portadas se muestran solo para
+identificación.
 
-This repository contains no games, no game files, no keys, no firmware, and no means of bypassing copy protection. You must supply files you dumped yourself from hardware and software you legally own. Do not use this project to obtain or share copyrighted material, and do not open issues asking for game files or keys.
+Este repositorio no contiene juegos, archivos de juego, llaves, firmware ni ningún medio de
+evadir la protección de copia. Tienes que aportar archivos extraídos por ti mismo de un
+hardware y un software que te pertenecen legalmente. No uses este proyecto para obtener o
+compartir material con derechos de autor, ni abras issues pidiendo archivos de juego o llaves.
