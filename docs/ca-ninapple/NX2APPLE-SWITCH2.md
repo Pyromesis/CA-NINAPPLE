@@ -98,6 +98,12 @@ En macOS pide macOS 13 o superior, Xcode 27.2 con el SDK de iOS y el .NET SDK 10
 - El límite en iPhone será la **memoria**: el perfil de Pokopia pide 9 GB
   (`mem_reserve 0x270000000`, `app_pool 0x240000000`), el mismo esquema que
   Donkey Kong Bananza. Si el juego no cabe, iOS lo cierra al arrancar.
+- **Tiempo de compilación**: los juegos de Switch 2 son el caso más caro de la
+  cadena, porque sus shaders (Ampere SM86) son mucho más grandes. Pokopia
+  (131.382 shaders) tardó **58 min en traducirlos** y **unas 10 h en compilarlos
+  con Metal** en un equipo de 12 hilos; el resto del pipeline son minutos. Las
+  medidas y lo que sí acelera están en
+  [COMPILAR-RAPIDO.md](COMPILAR-RAPIDO.md).
 
 ## Cómo se compila con este repo
 
@@ -170,8 +176,13 @@ arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
 
 ## Pendiente
 
-- Ningún juego de Switch 2 se ha empaquetado ni probado todavía en iPhone
-  (faltan los archivos de Pokopia; ver [PROBLEMAS.md](PROBLEMAS.md)).
+- **Pokopia** (Switch 2) se llegó a compilar: la traducción de sus 131.382
+  shaders se completó (58 min) y la compilación con Metal llegó al 22 %
+  (28.382 shaders en 3 h 21 min) antes de pararse. No se llegó a empaquetar ni
+  a probarlo en el iPhone. Los fuentes del juego y la caché de shaders se
+  borraron después, así que repetirlo es desde cero: otra traducción y otras
+  ~10 h de compilación. Las medidas están en
+  [COMPILAR-RAPIDO.md](COMPILAR-RAPIDO.md).
 - `--seen-shaders` (compilar solo los shaders ya vistos) sigue siendo solo para
   Mac; en iOS hay que traducir el mapa completo, que en Pokopia son 131.426
   shaders.

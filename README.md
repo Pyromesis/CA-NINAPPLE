@@ -14,25 +14,92 @@ CA-NINAPPLE es esta distribución: el mismo NXNative for Windows, con las guías
 los arreglos de esta copia. Compilas en tu PC el IPA de **tus propios** juegos y lo instalas
 en el iPhone o iPad. Aquí no hay juegos, llaves ni SDK de Apple.
 
-| Guía | Cuándo |
-|---|---|
-| [Empezar en Windows](docs/ca-ninapple/EMPEZAR.md) | de cero al IPA: requisitos, instalación y comandos |
-| [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | LiveContainer, memoria y ajustes |
-| [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md) | paso a paso completo: firmar, instalar y comprobar, con errores y soluciones |
-| [Mandos](docs/ca-ninapple/MANDOS.md) | Xbox y PlayStation por Bluetooth, mapeo de botones y problemas |
-| [TV y AirPlay](docs/ca-ninapple/TV-AIRPLAY.md) | el juego a 16:9 en la tele; el iPhone queda de mando |
-| [NX2Apple y Switch 2](docs/ca-ninapple/NX2APPLE-SWITCH2.md) | el motor nuevo, qué instalar y qué se puede esperar de rendimiento |
-| [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]`, builds partidos con XCI |
-| [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
+No es un emulador: el código arm64 del juego corre tal cual en el chip de Apple y los
+gráficos de Switch se rehacen sobre Metal. En un PC con Windows, sin Mac.
 
-En un paso, desde PowerShell en la raíz del repositorio:
+### Qué hace
+
+| | |
+|---|---|
+| **Sin Mac** | Metal Developer Tools para Windows, LLVM y el SDK de iPhoneOS de Xcode; upstream solo compila en Mac |
+| **IPA pequeño** | Compilación partida: la app sola (decenas de MB) y los datos del juego en *Documents* |
+| **Texturas BC** | BC1–BC7 transcodificadas a ASTC para los GPU que no las leen (A16 y anteriores) |
+| **Memoria** | La app pide *Increased Memory Limit* en su propia firma: ~6 GB en vez de ~3,4 GB |
+| **Launcher** | Pantalla de ajustes propia en UIKit, sin Swift |
+| **TV** | Salida a 16:9 por AirPlay o HDMI; el iPhone queda de mando |
+
+### Requisitos
+
+| Cosa | Detalle |
+|---|---|
+| PC | Windows 10 u 11 de 64 bits, con ~2× el tamaño del juego + 10 GB libres |
+| iPhone / iPad | iOS / iPadOS 26 o posterior; **A17 Pro o superior** (iPhone 15 Pro en adelante) o iPad con **M1 o superior**: las texturas vienen en BC y solo esos chips las leen en la GPU |
+| Juego | tu propio volcado (NSP, XCI, NSZ o XCZ) y tu `prod.keys` (los juegos de **Switch 2** no los necesitan) |
+| Apple ID | gratis: para bajar dos cosas de Apple y para firmar |
+
+### 1. Herramientas
+
+```powershell
+winget install --id LLVM.LLVM -e
+winget install --id Microsoft.DotNet.SDK.10 -e
+winget install --id KhronosGroup.VulkanSDK -e
+winget install --id Meta.Zstandard -e
+python -m pip install lz4 capstone fonttools pillow "backports.zstd; python_version < '3.14'"
+```
+
+De Apple, con tu Apple ID, en <https://developer.apple.com/download/all/>: **Metal Developer
+Tools for Windows** y **Xcode 26 o 27** (solo se usa su `iPhoneOS.sdk`, que se extrae con
+`python win\sdk\extract_xip.py`). Los enlaces oficiales están en la primera guía.
+
+### 2. Compilar
+
+Doble clic en **`Build-IPA-GUI.bat`** (ventana negra y rosa: se eligen los NSP, el
+`prod.keys` y se pulsa *Build IPA*), o desde PowerShell:
 
 ```powershell
 .\build.ps1 -Game "C:\Juegos\BALLxPIT"
 ```
 
-Descargas oficiales de todo lo que hace falta (Python, Git, LLVM, .NET, Vulkan SDK,
-Zstandard, Metal Developer Tools y Xcode) en la primera guía.
+El IPA aparece junto al juego; al lado queda `<title ID>_build\`, que es la caché de shaders:
+**no la borres**, o la siguiente compilación repite el trabajo.
+
+### 3. Instalar en el iPhone
+
+Firmar con un *signer* (LiveContainer, SideStore, AltStore o `plumesign`), instalar el IPA y
+copiar los datos del juego a *Documents*. El paso a paso, con los errores de cada paso, está
+en [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md).
+
+Con un Apple ID gratis **cada app instalada caduca a los 7 días** y hay un máximo de **3 apps**
+con perfil gratuito en cada dispositivo: desinstalar una borra también sus partidas.
+
+### Cuánto tarda
+
+Medido en un Ryzen 5 5600G (6 núcleos / 12 hilos). La etapa lenta es el compilador de Metal
+de Apple, que es de CPU y no usa la GPU:
+
+| Juego | Shaders | Primera compilación | Después |
+|---|---|---|---|
+| BALL x PIT | 22.319 (6.584 textos distintos) | ~25 min | minutos |
+| The Legend of Zelda: Tears of the Kingdom | 28.669 | ~35 min (estimado) | minutos |
+| Pokémon Pokopia (Switch 2) | 131.382 | **~1 h de traducción + ~10 h de compilación** | — |
+
+Cómo se reparte el tiempo, qué palancas aceleran y cuáles no sirven (compartir caché entre
+juegos, `-O0`, más trabajadores, la GPU) está medido en
+**[Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md)**.
+
+### Guías
+
+| Guía | Cuándo |
+|---|---|
+| [Empezar en Windows](docs/ca-ninapple/EMPEZAR.md) | de cero al IPA: requisitos, instalación y comandos |
+| [Instalar en el iPhone](docs/ca-ninapple/IPHONE.md) | LiveContainer, memoria y ajustes |
+| [Instalar desde el PC](docs/ca-ninapple/INSTALAR-DESDE-PC.md) | paso a paso completo: firmar, instalar y comprobar, con errores y soluciones |
+| [Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md) | dónde se va el tiempo y cómo se acelera |
+| [Mandos](docs/ca-ninapple/MANDOS.md) | Xbox y PlayStation por Bluetooth, mapeo de botones y problemas |
+| [TV y AirPlay](docs/ca-ninapple/TV-AIRPLAY.md) | el juego a 16:9 en la tele; el iPhone queda de mando |
+| [NX2Apple y Switch 2](docs/ca-ninapple/NX2APPLE-SWITCH2.md) | el motor nuevo, qué instalar y qué se puede esperar de rendimiento |
+| [Problemas](docs/ca-ninapple/PROBLEMAS.md) | pantalla negra con música, cierres, avisos `[RED]`, builds partidos con XCI |
+| [Juegos](docs/ca-ninapple/JUEGOS.md) | qué está probado y cómo añadir uno |
 
 El resto de este documento es el manual técnico del fork de Windows, en inglés.
 
@@ -54,8 +121,11 @@ El resto de este documento es el manual técnico del fork de Windows, en inglés
 - [Split builds (small IPA + data folder)](#split-builds-small-ipa--data-folder)
 - [Install the IPA on your iPhone or iPad](#install-the-ipa-on-your-iphone-or-ipad)
 - [The launcher on the device](#the-launcher-on-the-device)
+- [How long a build takes](#how-long-a-build-takes)
+- [Speeding up the shader build](#speeding-up-the-shader-build)
 - [How the Windows build works](#how-the-windows-build-works)
 - [Which games build on Windows](#which-games-build-on-windows)
+- [Switch 2 games](#switch-2-games)
 - [Building on Linux](#building-on-linux)
 - [Troubleshooting](#troubleshooting)
 - [Differences from upstream](#differences-from-upstream)
@@ -68,10 +138,14 @@ El resto de este documento es el manual técnico del fork de Windows, en inglés
 
 NXNative for Windows builds the same kind of IPA as upstream NXNative, from a Windows PC. The games below are the ones **built with this fork and run on a real device** by its author (an iPad with an Apple A16 GPU, iPadOS 27, signed with SideStore). Upstream's own list of tested games follows in [Upstream NXNative games](#upstream-nxnative-games).
 
+This copy's own builds, on an iPhone with the Windows path: Cuphead, Mario Kart 8 Deluxe, The Legend of Zelda: Tears of the Kingdom, Pokémon: Let's Go, Pikachu! and Hollow Knight: Silksong, the last one with the Switch 2 engine ([docs/ca-ninapple/NX2APPLE-SWITCH2.md](docs/ca-ninapple/NX2APPLE-SWITCH2.md)). Pokémon Pokopia (Switch 2) was compiled to 22 % of its Metal stage and then abandoned; its measurements are in [docs/ca-ninapple/COMPILAR-RAPIDO.md](docs/ca-ninapple/COMPILAR-RAPIDO.md).
+
 ## Games on NXNative for Windows
 
 | Game | Version | Built on Windows | On the iPad (A16, 6 GB) | Notes |
 |---|---|---|---|---|
+| **Hollow Knight: Silksong** | 1.0.30000 | yes: the Switch 2 engine (NVN2 / Ampere); the 6.29 GB of game data go to *Documents* as `romfs.img` | not tested | On an iPhone: the launcher shows the game and *Play*, the log names the game file and the shader libraries, and the app asks for Increased Memory Limit |
+| **Pokémon Pokopia** (Switch 2) | 2.0.1 | yes, up to 22 % of the Metal stage; then abandoned | — | 131,382 shaders: ~1 h of translation and ~10 h of Metal compile on a 12-thread PC. The sources and the cache were deleted, so it starts from zero again |
 | **The Legend of Zelda: Tears of the Kingdom** | 1.4.3 | yes: split build, 28,669 shaders, 39 MB app + 17 GB data | **plays**, saves load | With Increased Memory Limit on: 3.7 GB, no closes. Render scale 60 % + MetalFX + Handheld: GPU about 10 ms a frame, mostly 60 fps; drops in fights (CPU). BC textures decoded for the A16. |
 | **Balatro** | 1.0 (v0) | yes: LÖVE shaders rebuilt offline from the game's Lua | **plays** | |
 | **Mario vs. Donkey Kong** | 1.0.0 (v0) | yes | runs | slow on the A16; not tuned yet |
@@ -379,6 +453,40 @@ The settings screen before the game starts follows upstream's single-screen Swif
 
 The list itself is upstream's ([`dm/games/settings.tsv`](dm/games/settings.tsv)), so a setting appears only in the games it applies to. An `env.txt` in the app's Documents folder (Files app) still overrides any setting, as upstream documents.
 
+## How long a build takes
+
+The first build of a game compiles every one of its shaders with Apple's Metal compiler; the builds after it reuse the cache in the build folder. Two stages are long:
+
+| Stage | What it does | Cost |
+|---|---|---|
+| Translation | The game's shader binaries → SPIR-V (Ryujinx's translator) → MSL (spirv-cross) | ~38 shaders/s |
+| Metal compile | MSL → `.metallib` for iPhoneOS (`metal.exe` + `metallib.exe`) | 0.42 s of CPU per shader |
+
+Measured on a 6-core / 12-thread Ryzen 5 5600G with Metal Developer Tools 32023.850:
+
+| Game | Shaders | First build | Later builds |
+|---|---|---|---|
+| BALL x PIT | 22,319 (6,584 distinct MSL texts) | ~25 min | minutes |
+| The Legend of Zelda: Tears of the Kingdom | 28,669 | ~35 min (estimated) | minutes |
+| Pokémon Pokopia (Switch 2) | 131,382 | ~1 h of translation + ~10 h of Metal compile | — |
+
+Apple's `metal.exe` is a host compiler (a clang driver with the Metal back end): it runs on the CPU and never uses the PC's graphics card, so this stage cannot be moved to the GPU. A Switch 2 shader costs about five times more than a Switch 1 one (the Ampere SM86 programs are far larger), which is why a 131,382-shader game takes hours.
+
+## Speeding up the shader build
+
+| Lever | Effect |
+|---|---|
+| More cores | Linear: twice the cores, half the time. `NXW_SHADER_JOBS` sets the number of workers (one per logical core by default) |
+| Keep `<title ID>_build\` | It holds the cache. Delete the IPA, not the folder |
+| One platform per folder | A folder that already holds a Mac build's libraries of the same chain compiles the macOS ones too, which doubles the Metal work |
+| Another machine | A cloud VM with 32 vCPUs through the Linux path ([win/LINUX.md](win/LINUX.md)), or an Apple silicon Mac |
+
+Measured with 72 shaders: 6 workers give 9.2 shaders/s, 12 give 14.8, 18 give 14.6 and 24 give 14.6. More workers than cores do not help.
+
+Measured and **not** helpful: `-O0` (slower, 6.6 against 10.5 shaders/s), dropping `-fpreserve-invariance` (no change), sharing the Metal cache between games (only 0.2 % of the MSL texts match across two games) and the GPU (the compiler does not use it).
+
+The full measurements, and the other projects that run Switch games on Apple silicon, are in the Spanish guide [Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md).
+
 ## How the Windows build works
 
 `win/build_ipa_windows.py` runs upstream's own pipeline (`scripts/build_ipa_from_nsp.py`) unchanged. Only the steps that call macOS tools are replaced, at the subprocess boundary:
@@ -415,6 +523,18 @@ Upstream lists about 65 playable games in its [games table](dm/games/README.md#g
 - **Oodle, Unreal and LZ5 games** (Octopath Traveler 0 / II, Bayonetta 3, ASTRAL CHAIN, Pokémon Legends: Z-A, DRAGON QUEST XI S, FINAL FANTASY RESONANCE) decode their shader archives with the game's own decoder, run in an emulated ARM64 machine ([`win/oodle_emu.py`](win/oodle_emu.py), [`win/arm64_emu.py`](win/arm64_emu.py)). Octopath Traveler 0's 10,596 Oodle-compressed shaders decode this way.
 - **Games without an upstream profile** (Megabyte Punch) get a provisional profile guessed from a survey. The IPA is a best effort and may not boot until the game is brought up ([docs/agents](docs/agents/README.md)).
 - **Use the tested version.** Another version builds with its own shaders, but the fixes made for the tested build (60 fps patches and others) do not apply, and the build says so.
+
+## Switch 2 games
+
+Switch 2 titles are supported by the engine itself: NVN2 and Ounce (Ampere) translated to Metal, the Ampere shader front end, and the `.nup` containers that need no `prod.keys`. A Switch 2 game is built from a folder (`base/`, `updates/`, `dlc/`) or from a `.nup` file:
+
+```
+python win\build_ipa_windows.py "C:\Juegos\MiJuego.nup" --allow-other-metal
+```
+
+`--allow-other-metal` is required on Windows: the Metal compiler there is `metalfe-custom-windows` (32023.850) and the engine only accepts the one from Xcode 27.2 (32023.922) by default.
+
+Their shaders are the expensive ones: Pokopia's 131,382 took ~1 h to translate and ~10 h to compile on a 12-thread PC. The Spanish guide [NX2Apple y Switch 2](docs/ca-ninapple/NX2APPLE-SWITCH2.md) has the whole flow: the engine pin, the translator rebuild the lock file needs on Windows, and what each game's profile asks for.
 
 ## Building on Linux
 

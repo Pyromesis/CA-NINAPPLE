@@ -21,6 +21,7 @@ Empieza siempre por el **final** de `log.txt`: ahí está lo que pasó justo ant
 | Se cierra al pulsar *Play* y `log.prev.txt` termina en `[RED] sf: the game connects to service bt itself` | El juego usa Bluetooth (`bt`), que el host no sirve | La API de Bluetooth queda inerte en el host. Ver [Se cierra al pulsar Play con Bluetooth](#se-cierra-al-pulsar-play-con-bluetooth) |
 | `[RED] this IPA uses vX (…), a version game profile … was not brought up on` | El perfil registrado es de otra versión | Es un aviso, no un error: el IPA usa un perfil derivado. La ruta soportada es poner la actualización que el perfil espera en la carpeta del juego |
 | `doctor.py` muestra `MISSING` | Falta una herramienta | Instala lo que dice su línea `get it:` o fija la ruta en `win\toolchain.json` |
+| La primera compilación tarda horas (10 h en un juego de Switch 2) | El compilador de Metal de Apple es de CPU y no tiene atajo por GPU | Es normal: mide dónde se va el tiempo y qué sí acelera en [Compilar más rápido](COMPILAR-RAPIDO.md) |
 | La app se llama distinto o el bundle ID no es el del build | El firmador los sobreescribió | Mantén el nombre y el bundle ID del build en la herramienta de firma |
 | Va lento, se calienta y baja de FPS | GPU al límite | *Render scale* al 75 %, *Console mode: Handheld*, *Upscaling: Standard* |
 | El personaje va más rápido de lo normal (Zelda) | El IPA es de una versión del juego sin los parches del frame step, y el host fija los presentes a 30 o 60 | Pon `DM_FPS_TARGET=0` en `Documents/env.txt` o elige *Game's own* en *Frame rate*. Ver [Va más rápido de lo normal](#va-más-rápido-de-lo-normal) |
@@ -450,6 +451,25 @@ del worktree `C:\Users\berna\nxw\NX2Apple-engine`:
 Los juegos de Switch 2 (`.nup` o carpeta `base/updates/dlc`) no necesitan
 `prod.keys`. La guía completa está en
 [NX2APPLE-SWITCH2.md](NX2APPLE-SWITCH2.md).
+
+## La compilación de shaders tarda horas
+
+No es un fallo: es la etapa más lenta del pipeline y no tiene atajo por GPU
+(el compilador de Metal de Apple es un compilador de host). Lo medido en este
+PC y lo que sí acelera, en [Compilar más rápido](COMPILAR-RAPIDO.md).
+
+Resumen:
+
+| Dato | Valor |
+|---|---|
+| Coste por shader | 0,42 s de CPU (`metal.exe` 0,374 s + `metallib.exe` 0,047 s) |
+| Rendimiento por número de trabajadores | 6 → 9,2 shaders/s · **12 → 14,8** · 18 → 14,6 · 24 → 14,6 |
+| `-O0` | **Más lento** (6,6 frente a 10,5 shaders/s) |
+| Compartir la caché entre juegos | Solo coincide el 0,2 % de los textos de MSL: no compensa |
+| Pokopia (Switch 2) | 131.382 shaders: 58 min de traducción y ~10 h de compilación |
+
+La palanca real es el número de núcleos (`NXW_SHADER_JOBS`), no tocar las
+banderas del compilador.
 
 ## Recopilar un informe
 

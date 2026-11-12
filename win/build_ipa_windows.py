@@ -40,7 +40,14 @@ def main():
     # every Python the pipeline starts loads the shim; this one too
     os.environ['PYTHONPATH'] = os.pathsep.join([str(SHIM)] + [p for p in os.environ.get('PYTHONPATH', '').split(os.pathsep) if p])
     os.environ.setdefault('PYTHONUTF8', '1')   # the pipeline reads and writes UTF-8 text without naming the encoding
-    os.environ.setdefault('J', str(max(8, 2 * (os.cpu_count() or 4))))   # dmsh_build.py's workers (upstream 8): on Windows each shader compile is mostly metal.exe starting up, so twice the cores keep the CPU busy
+    # dmsh_build.py's workers (upstream 8). Measured on a 6-core / 12-thread Ryzen 5 5600G with the real shaders: 12 workers
+    # give 14.8 shaders/s, 18 give 14.6 and 24 give 14.6, so one per logical core is enough (a compile is a CPU-bound metal.exe,
+    # not I/O waiting). NXW_SHADER_JOBS sets the number for a machine with a different balance.
+    if 'J' not in os.environ:
+        jobs = max(8, os.cpu_count() or 4)
+        try: jobs = int(os.environ.get('NXW_SHADER_JOBS') or jobs)
+        except ValueError: pass
+        os.environ['J'] = str(max(1, jobs))
     # Windows builds get their own bundle IDs (org.nxnativewindows.<title ID>), so they install beside a Mac-built IPA of the same game; --bundle-id still names any ID
     if not any(a == '--bundle-id' or a.startswith('--bundle-id=') for a in sys.argv):
         sys.path.insert(0, str(WIN)); import toolchain as _tc
