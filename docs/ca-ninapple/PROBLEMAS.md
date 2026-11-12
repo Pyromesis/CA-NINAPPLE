@@ -469,7 +469,10 @@ Resumen:
 | Pokopia (Switch 2) | 131.382 shaders: 58 min de traducción y ~10 h de compilación |
 
 La palanca real es el número de núcleos (`NXW_SHADER_JOBS`), no tocar las
-banderas del compilador.
+banderas del compilador. Y hay una más grande que todavía no tenemos:
+upstream terminó los shaders en **procesos** trabajadores (×1,9 medido) porque
+los hilos comparten un solo GIL; en Windows hay que portarlo, porque upstream
+usa `fork`. Upstream compila el mismo juego de Pokopia en ~2,5 h en un M4 Pro.
 
 ## Recopilar un informe
 

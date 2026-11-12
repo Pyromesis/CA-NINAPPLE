@@ -591,14 +591,24 @@ puede pasar a la GPU. Un shader de Switch 2 cuesta unas cinco veces más que uno
 (los programas Ampere SM86 son mucho más grandes), y por eso un juego de 131.382 shaders se
 tarda horas.
 
+Upstream mide ese mismo juego de Pokopia en **~2,5 h en un M4 Pro**, con una reparación que
+a este motor todavía le falta: el builder termina los shaders en hilos que comparten un solo
+GIL, de modo que un núcleo hace el trabajo en Python (reescribir el MSL, calcular la
+reflexión, escribir las salidas) mientras los demás compiladores de Metal esperan. El arreglo
+es terminar cada shader en un **proceso** trabajador: ×1,9 medido por upstream (42.848
+shaders: 3.506 s → 1.826 s). Está descrito en
+[Compilar más rápido](docs/ca-ninapple/COMPILAR-RAPIDO.md).
+
 ## Acelerar la compilación de shaders
 
 | Palanca | Efecto |
 |---|---|
 | Más núcleos | Lineal: el doble de núcleos, la mitad de tiempo. `NXW_SHADER_JOBS` fija el número de trabajadores (por defecto, uno por hilo lógico) |
+| Terminar cada shader en un proceso, no en un hilo | Arranque de los trabajadores en el propio PC: **×1,9** medido por upstream. En Windows hay que portarlo (upstream usa `fork`) |
 | Conservar `<title ID>_build\` | Es la caché. Borra el IPA, no la carpeta |
 | Una plataforma por carpeta | Una carpeta que ya tiene las librerías de un build de Mac de la misma cadena compila también las de macOS, y eso duplica el trabajo de Metal |
 | Otra máquina | Una máquina en la nube con 32 vCPU por la vía de Linux ([win/LINUX.md](win/LINUX.md)), o un Mac con chip Apple silicon |
+| Un Mac | Upstream mide ese juego de Pokopia en **~2,5 h en un M4 Pro**: ×3-5 frente a este PC |
 
 Medido con 72 shaders: 6 trabajadores dan 9,2 shaders/s, 12 dan 14,8, 18 dan 14,6 y 24 dan
 14,6. Más trabajadores que núcleos no ayudan.

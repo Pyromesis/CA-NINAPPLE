@@ -183,6 +183,12 @@ arranque) es el mismo de [INSTALAR-DESDE-PC.md](INSTALAR-DESDE-PC.md).
   borraron después, así que repetirlo es desde cero: otra traducción y otras
   ~10 h de compilación. Las medidas están en
   [COMPILAR-RAPIDO.md](COMPILAR-RAPIDO.md).
+- Upstream compila ese mismo juego en **~2,5 h en un M4 Pro**: la diferencia
+  es sobre todo el GIL (el builder termina los shaders en hilos que comparten
+  uno solo) y el número de núcleos. Upstream lo arregló el 11/11/2026
+  terminando cada shader en un proceso trabajador; en Windows hay que portarlo
+  porque upstream usa `fork`. Detalle en
+  [COMPILAR-RAPIDO.md](COMPILAR-RAPIDO.md).
 - `--seen-shaders` (compilar solo los shaders ya vistos) sigue siendo solo para
   Mac; en iOS hay que traducir el mapa completo, que en Pokopia son 131.426
   shaders.
