@@ -41,7 +41,7 @@ del motor nuevo comprueba lo mismo de siempre y hoy sale todo en `[ok ]`:
 | SDK de iPhoneOS 27.1 (extraído de Xcode) | `C:\Users\berna\nxw\nxnative-win\win\sdk\out\iPhoneOS.sdk` |
 | Compilador Metal para Windows (`metal.exe`, `metallib.exe`) | instalado |
 | `spirv-cross`, `glslangValidator`, `zstd` | instalados |
-| Traductor `dmsh_xlate.dll` | en el propio repo |
+| Traductor `dmsh_xlate` (nativo, NativeAOT) | en el propio repo, compilado para Windows |
 
 Para un juego de Switch 2 **no hace falta `prod.keys`**: los `.nup` y las
  carpetas `base/updates/dlc` van sin cifrar. Para Switch 1 sigue haciendo falta
@@ -74,7 +74,7 @@ Qué instala solo y qué no:
 | LLVM/clang + `ld64.lld` (LLVM-MinGW fijado; renombra `ld.lld.exe`) | lo descarga con `--fix` |
 | SDK de iPhoneOS 26+ (hace falta Metal 4) | lo descarga con `--sdk` (o lo importas) |
 | Metal Developer Tools para Windows (`metal.exe`, `metallib.exe`) | **manual**, con Apple ID |
-| .NET 10 (para `nx_extract` y `dmsh_xlate`) | **manual** |
+| .NET 10 (solo para recompilar el traductor y el extractor) | **manual**, pero no hace falta en ejecucion: los dos son ejecutables nativos |
 | `zstd` | obligatorio; la GUI lo descarga, por consola hay que ponerlo a mano |
 | `spirv-cross`, `glslangValidator` | vienen en `engine/dm/gfx/tools/spirv_cross_bin` |
 | Fuente Unicode (`STD_FONT`) | opcional, cualquier TTF amplio |
@@ -142,13 +142,22 @@ y apuntar el lock a las herramientas nativas. En este PC:
 
 ```powershell
 cd C:\Users\berna\nxw\NX2Apple-engine
-dotnet publish dm\gfx\tools\dmsh_xlate\dmsh_xlate.csproj -c Release -f net10.0 -o "$env:TEMP\xlate_build"
-Get-ChildItem "$env:TEMP\xlate_build" -File | Where-Object { $_.Name -ne 'dmsh_xlate.exe' } |
-  Copy-Item -Destination dm\gfx\tools\dmsh_xlate_bin -Force
+# el traductor y el extractor son ejecutables nativos (NativeAOT), como los de upstream
+dotnet publish dm\gfx\tools\dmsh_xlate\dmsh_xlate.csproj -c Release -r win-x64 -p:PublishAot=true -o "$env:TEMP\xlate"
+Copy-Item "$env:TEMP\xlate\dmsh_xlate.exe" dm\gfx\tools\dmsh_xlate_bin\ -Force
+Copy-Item "$env:TEMP\xlate\dmsh_xlate.exe" dm\gfx\tools\dmsh_xlate_bin\dmsh_xlate -Force   # el lock hashea este nombre
+dotnet publish dm\tools\nx_extract\nx_extract.csproj -c Release -r win-x64 -p:PublishAot=true -o "$env:TEMP\nxextract"
+Copy-Item "$env:TEMP\nxextract\nx_extract.exe" dm\tools\nx_extract_bin\ -Force
+Copy-Item "$env:TEMP\nxextract\nx_extract.exe" dm\tools\nx_extract_bin\nx_extract -Force
 $env:SPIRV_CROSS = 'C:\VulkanSDK\1.4.363.0\Bin\spirv-cross.exe'
 python win\update_tools_lock.py
 python dm\gfx\tools\dmsh_chain.py --header
 ```
+
+La compilacion nativa necesita el SDK de .NET 10 y las **Build Tools de Visual Studio**
+(el enlazador); sin ellas, `dotnet publish` no puede generar el ejecutable. La otra via es
+la de antes (una DLL con `dotnet publish` sin `-p:PublishAot=true`), que ya no es la que
+usa upstream.
 
 `update_tools_lock.py` cambia solo las líneas que dependen de Windows
 (`dmsh_xlate.dll`, las DLL de Ryujinx, `xlate_source` y `spirv-cross`) y deja las

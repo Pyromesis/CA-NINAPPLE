@@ -630,7 +630,7 @@ límite del subproceso:
 |---|---|---|
 | Extraer NSP / XCI (LibHac) | `nx_extract` (.NET) | el mismo, compilado con el .NET SDK para Windows |
 | Reescribir los módulos del juego | `patch_nso.py` | el mismo |
-| Traducir shaders (Ryujinx) | el apphost `dmsh_xlate` | las mismas DLL fijadas por `dotnet dmsh_xlate.dll`, para que las huellas de la cadena sigan cuadrando con `dmsh_chain.lock` |
+| Traducir shaders (Ryujinx) | el `dmsh_xlate` nativo | el mismo traductor nativo compilado para Windows (NativeAOT), para que las huellas de la cadena sigan cuadrando con `dmsh_chain.lock` |
 | Compilar las librerías de shaders | `xcrun metal` / `metallib` (Xcode) | Metal Developer Tools para Windows, a través de [`win/xcrun.py`](win/xcrun.py) (`-mios-version-min` pasa a ser `-target air64-apple-ios…`) |
 | Compilar la app | `xcodegen` + `xcodebuild` | LLVM `clang -target arm64-apple-ios26.0 -isysroot iPhoneOS.sdk`, enlazado por `ld64.lld` ([`win/build_app.py`](win/build_app.py)) |
 | Launcher | `Launcher.swift` (SwiftUI) | [`win/ios/Launcher.m`](win/ios/Launcher.m) (UIKit, el mismo contrato) |
@@ -644,7 +644,7 @@ límite del subproceso:
 | Cortes de regiones de direcciones para un build `sdk` sin registrar | añadidos a mano por build ID | [`win/sdk_auto_cuts.py`](win/sdk_auto_cuts.py) los encuentra en el código (las cargas de node-area del constructor de `AddressRegionManager` y la alineación de 1 GB), solo cuando la coincidencia es única |
 
 [`win/pyshim/sitecustomize.py`](win/pyshim/sitecustomize.py) se carga en cada Python que
-arranca el pipeline. Mapea `xcrun`, `dmsh_xlate`, `which`, `python3` y `bash build_ipa.sh` a
+arranca el pipeline. Mapea `xcrun`, `dmsh_xlate` (al `.exe` nativo), `nx_extract`, `which`, `python3` y `bash build_ipa.sh` a
 sus equivalentes de Windows, y hace seguro `ctypes.CDLL(None)`. Las notas técnicas están en
 [win/README.md](win/README.md).
 
@@ -790,7 +790,7 @@ mensaje claro cuando upstream las cambia. Las funciones que envuelve el driver t
 pueden cambiar sus argumentos en upstream; después de una fusión, contrástalas con
 `scripts/build_ipa_from_nsp.py` antes de la primera compilación. Cuando una fusión traiga
 una compilación nueva del traductor, deja en `dm/gfx/tools/dmsh_chain.lock` las líneas de las
-DLL de upstream y las de spirv-cross y Metal de este port, y ejecuta luego
+nativo de upstream y las de spirv-cross y Metal de este port, y ejecuta luego
 `dmsh_chain.py --header`.
 
 ## Créditos y licencia
