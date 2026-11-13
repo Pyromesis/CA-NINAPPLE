@@ -227,6 +227,42 @@ ios install --path "C:\Juegos\BALLxPIT\BallXPit-signed.ipa"
 Las partidas viven en `Documents/save/` y no se borran al reinstalar la misma app. Aun así,
 cópialas antes si vas a desinstalar.
 
+#### Con la app ya instalada: firma con el mismo bundle ID
+
+Si la app que hay en el teléfono **ya está firmada** (porque la firmaste antes), al volver a
+firmar ese mismo IPA el firmador le añade **otra vez** el ID de equipo al bundle ID: queda
+`…986S29SKK3.986S29SKK3`, que es **otra app** (ocupa otra de las tres plazas del perfil
+gratuito y deja la vieja caducada ahí). Para evitarlo, di el bundle ID que quieres con
+`--custom-identifier`, y pasa el **id numérico de usbmuxd** (no el UDID) con `--udid`:
+
+```powershell
+cd C:\ruta\del\repo
+python win\usbmuxd_id.py          # 1  USB  ...44C01C   (este numero es el que quiere --udid)
+
+plumesign sign --package "C:\Juegos\Cuphead\Cuphead-signed.ipa" --apple-id `
+  --udid 1 --register-and-install `
+  --custom-identifier "org.nxnativewindows.0100a5c00d162000.986S29SKK3" `
+  -o "C:\Juegos\Cuphead\Cuphead-renew.ipa"
+```
+
+- `--register-and-install` registra el App ID, instala y deja el IPA firmado en `-o`. Es un
+  paso: no hace falta el `ios install` después.
+- `--custom-identifier` fija el bundle ID **tal cual**: el que ya está instalado. Así la
+  instalación **reemplaza** la app en vez de crear otra, y no gastas una de las tres plazas
+  del perfil gratuito.
+- **Los datos no se pierden.** Al reemplazar la app, iOS migra su carpeta de datos a un
+  contenedor nuevo (cambia el UUID) pero su contenido se conserva: `Documents/save/`, el
+  `romfs.img`, los `pso_archive/` y los logs siguen ahí. Comprobado con
+  `ios fsync --app=<bundle ID> tree --path=/Documents` antes y después.
+- El comando tarda: firmar (el IPA se firma entero) más la instalación, que con 4,7 GB
+  (Cuphead) fueron unos 15 min; con 250 MB (Pikachu), unos 7 min; con 93 MB (Silksong),
+  menos de un minuto.
+- El IPA firmado que sale se puede borrar: para la próxima renovación vuelve a firmar el
+  original con `--custom-identifier`.
+- Si el `ios fsync tree` no lista `romfs.img` tras renovar, el build se hizo con los datos
+  separados (`--romfs separate`): copia el `romfs.img` otra vez a *Documents* (ver
+  [Copiar los datos del juego](#a2c-copiar-los-datos-del-juego-build-partida)).
+
 ## Ruta B: LiveContainer
 
 LiveContainer ejecuta el IPA dentro de su propia app. La ventaja es que una sola firma de

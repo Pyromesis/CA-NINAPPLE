@@ -251,8 +251,22 @@ dispositivo (`Error: Other error: Device ID … not found`).
 
 Al **re-firmar** un `.app` que ya venía firmado con la cuenta, `plumesign` añade otra vez el
 Team ID al bundle ID: queda `…010013c00e930000.986S29SKK3.986S29SKK3`. La app funciona, pero
-`ios fsync --app=…` tiene que usar ese ID doble (míralo con `ios apps`). Para evitarlo, firma el
-`.app` **sin firmar** que hay dentro del IPA original en vez del ya firmado.
+`ios fsync --app=…` tiene que usar ese ID doble (míralo con `ios apps`) y, al instalarla, es
+**otra app**: ocupa otra de las tres plazas del perfil gratuito y deja la anterior caducada.
+
+Dos formas de evitarlo:
+
+- Firma el `.app` **sin firmar** que hay dentro del IPA original en vez del ya firmado.
+- O fija el bundle ID con `--custom-identifier` (lo que se hizo al renovar las licencias):
+  ```powershell
+  plumesign sign --package "…\Cuphead-signed.ipa" --apple-id --udid 1 --register-and-install `
+    --custom-identifier "org.nxnativewindows.0100a5c00d162000.986S29SKK3" -o "…\Cuphead-renew.ipa"
+  ```
+  El `--udid` es el **id numérico de usbmuxd** (`python win\usbmuxd_id.py`), no el UDID.
+  Con esto la instalación reemplaza la app (mismo bundle ID), no crea otra, y **los datos se
+  conservan**: iOS migra la carpeta de datos a un contenedor nuevo (cambia el UUID) pero su
+  contenido sigue ahí (`save/`, `romfs.img`, `pso_archive/`). Ver
+  [Renovar a los 7 días](INSTALAR-DESDE-PC.md#a5-renovar-a-los-7-días).
 
 ## El perfil gratuito solo deja tres apps instaladas
 
